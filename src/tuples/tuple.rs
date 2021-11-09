@@ -68,3 +68,43 @@ impl<T> Neg for Tuple<T> {
         -1.0 * self
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_add_tuples() {
+        let v1 = Tuple(1.0, 2.0, 3.0, 4.0, PhantomData::<f64>);
+        let v2 = Tuple(2.0, 3.0, -4.0, 5.0, PhantomData);
+        assert_eq!(v1 + v2, Tuple(3.0, 5.0, -1.0, 9.0, PhantomData));
+    }
+
+    #[test]
+    fn test_negate_tuple() {
+        assert_eq!(
+            -Tuple(1.0, -2.0, 3.0, -4.0, PhantomData::<f64>),
+            Tuple(-1.0, 2.0, -3.0, 4.0, PhantomData::<f64>),
+        )
+    }
+
+    #[test]
+    fn test_tuple_scalar_mult() {
+        assert_eq!(
+            Tuple(1.0, 2.0, 3.0, 4.0, PhantomData::<()>) * 2.0,
+            Tuple(2.0, 4.0, 6.0, 8.0, PhantomData::<()>),
+        );
+        assert_eq!(
+            2.0 * Tuple(1.0, 2.0, 3.0, 4.0, PhantomData::<()>),
+            Tuple(2.0, 4.0, 6.0, 8.0, PhantomData::<()>)
+        )
+    }
+
+    #[test]
+    fn test_vec_scalar_div() {
+        assert_eq!(
+            Tuple(1.0, 2.0, 3.0, 4.0, PhantomData::<()>) / 2.0,
+            Tuple(0.5, 1.0, 1.5, 2.0, PhantomData::<()>),
+        )
+    }
+}
