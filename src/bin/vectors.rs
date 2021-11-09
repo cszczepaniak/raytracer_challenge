@@ -9,7 +9,7 @@ fn main() {
     };
     let mut particle =
         Particle::with_env(env, Vector::new(0.0, 2.0, 0.0), Vector::new(2.0, 0.0, 0.0));
-    while particle.position.y >= 0.0 {
+    while particle.position.1 >= 0.0 {
         println!("{:?}", particle);
         particle.step();
     }

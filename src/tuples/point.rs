@@ -1,26 +1,24 @@
-use crate::tuples::vector::Vector;
+use std::marker::PhantomData;
 use std::ops;
 
-#[derive(Debug)]
-pub struct Point {
-    x: f64,
-    y: f64,
-    z: f64,
-    w: f64,
-}
+use super::tuple::Tuple;
+use super::vector::Vector;
+
+struct PointTuple;
+type Point = Tuple<PointTuple>;
 
 // Subtracting two points makes a vector
 impl ops::Sub for Point {
     type Output = Vector;
 
     fn sub(self, rhs: Self) -> Vector {
-        Vector::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
+        Vector::new(self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2)
     }
 }
 
 impl Point {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
-        Point { x, y, z, w: 1.0 }
+        Tuple(x, y, z, 1.0, PhantomData)
     }
 }
 

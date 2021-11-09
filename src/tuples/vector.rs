@@ -1,77 +1,40 @@
-use std::ops;
+use std::{marker::PhantomData, ops};
+
+use super::tuple::Tuple;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Vector {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
-    pub w: f64,
-}
+pub struct VectTuple;
 
-// Adding two vectors makes another vector
-impl ops::Add for Vector {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        Vector::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
-    }
-}
+pub type Vector = Tuple<VectTuple>;
 
 // Subtracting two vectors makes a vector
 impl ops::Sub for Vector {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        Vector::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
-    }
-}
-
-// Scalar vector multiplication
-impl ops::Mul<f64> for Vector {
-    type Output = Self;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Vector::new(self.x * rhs, self.y * rhs, self.z * rhs)
-    }
-}
-
-// Negating a vector makes another vector
-impl ops::Neg for Vector {
-    type Output = Self;
-
-    fn neg(self) -> Self::Output {
-        self * -1.0
-    }
-}
-
-// Scalar vector division
-impl ops::Div<f64> for Vector {
-    type Output = Self;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        self * (1.0 / rhs)
+        Vector::new(self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2)
     }
 }
 
 impl Vector {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
-        Vector { x, y, z, w: 0.0 }
+        Tuple(x, y, z, 0.0, PhantomData)
     }
 
     pub fn dot(&self, other: &Vector) -> f64 {
-        self.x * other.x + self.y * other.y + self.z * other.z + self.w * other.w
+        self.0 * other.0 + self.1 * other.1 + self.2 * other.2 + self.3 * other.3
     }
 
     pub fn cross(&self, other: &Vector) -> Vector {
         Vector::new(
-            self.y * other.z - self.z * other.y,
-            self.z * other.x - self.x * other.z,
-            self.x * other.y - self.y * other.x,
+            self.1 * other.2 - self.2 * other.1,
+            self.2 * other.0 - self.0 * other.2,
+            self.0 * other.1 - self.1 * other.0,
         )
     }
 
     pub fn magnitude(&self) -> f64 {
-        (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
+        (self.0 * self.0 + self.1 * self.1 + self.2 * self.2).sqrt()
     }
 
     pub fn normalize(&self) -> Vector {
