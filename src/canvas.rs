@@ -41,10 +41,11 @@ impl Canvas {
         let mut row_width = 0usize;
         for px in self.pixels.iter() {
             let bytes = px.to_bytes();
-            let r = format!("{}", bytes.0);
-            let g = format!("{}", bytes.1);
-            let b = format!("{}", bytes.2);
-            let components = [r, g, b];
+            let components = [
+                format!("{}", bytes.0),
+                format!("{}", bytes.1),
+                format!("{}", bytes.2),
+            ];
 
             for comp in components {
                 let want_to_write = if row_width == 0 {
