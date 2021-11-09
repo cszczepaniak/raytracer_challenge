@@ -41,13 +41,12 @@ impl Canvas {
         let mut row_width = 0usize;
         for px in self.pixels.iter() {
             let bytes = px.to_bytes();
-            let components = [
+
+            for comp in [
                 format!("{}", bytes.0),
                 format!("{}", bytes.1),
                 format!("{}", bytes.2),
-            ];
-
-            for comp in components {
+            ] {
                 let want_to_write = if row_width == 0 {
                     // at the beginning of a row, we don't write the leading space
                     comp.len()
