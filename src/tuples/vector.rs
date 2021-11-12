@@ -1,44 +1,94 @@
-use std::{marker::PhantomData, ops};
-
-use super::tuple::Tuple;
+use std::ops;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct VectTuple;
+pub struct Vector {
+    data: [f64; 4],
+}
 
-pub type Vector = Tuple<VectTuple>;
+impl ops::Index<usize> for Vector {
+    type Output = f64;
 
-// Subtracting two vectors makes a vector
+    fn index(&self, index: usize) -> &Self::Output {
+        match index {
+            0..=3 => &self.data[index],
+            _ => panic!("index out of range"),
+        }
+    }
+}
+
+impl ops::Add for Vector {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Vector::new(self[0] + rhs[0], self[1] + rhs[1], self[2] + rhs[2])
+    }
+}
+
 impl ops::Sub for Vector {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        Vector::new(self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2)
+        Vector::new(self[0] - rhs[0], self[1] - rhs[1], self[2] - rhs[2])
+    }
+}
+
+impl ops::Mul<f64> for Vector {
+    type Output = Vector;
+
+    fn mul(self, rhs: f64) -> Self::Output {
+        Vector::new(self[0] * rhs, self[1] * rhs, self[2] * rhs)
+    }
+}
+
+impl ops::Mul<Vector> for f64 {
+    type Output = Vector;
+
+    fn mul(self, rhs: Vector) -> Self::Output {
+        rhs * self
+    }
+}
+
+impl ops::Div<f64> for Vector {
+    type Output = Vector;
+
+    fn div(self, rhs: f64) -> Self::Output {
+        1.0 / rhs * self
+    }
+}
+
+impl ops::Neg for Vector {
+    type Output = Vector;
+
+    fn neg(self) -> Self::Output {
+        -1.0 * self
     }
 }
 
 impl Vector {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
-        Tuple(x, y, z, 0.0, PhantomData)
+        Vector {
+            data: [x, y, z, 0.0],
+        }
     }
 
     pub fn dot(&self, other: &Vector) -> f64 {
-        self.0 * other.0 + self.1 * other.1 + self.2 * other.2 + self.3 * other.3
+        self[0] * other[0] + self[1] * other[1] + self[2] * other[2] + self[3] * other[3]
     }
 
     pub fn cross(&self, other: &Vector) -> Vector {
         Vector::new(
-            self.1 * other.2 - self.2 * other.1,
-            self.2 * other.0 - self.0 * other.2,
-            self.0 * other.1 - self.1 * other.0,
+            self[1] * other[2] - self[2] * other[1],
+            self[2] * other[0] - self[0] * other[2],
+            self[0] * other[1] - self[1] * other[0],
         )
     }
 
     pub fn magnitude(&self) -> f64 {
-        (self.0 * self.0 + self.1 * self.1 + self.2 * self.2).sqrt()
+        (self[0] * self[0] + self[1] * self[1] + self[2] * self[2]).sqrt()
     }
 
     pub fn normalize(&self) -> Vector {
-        *self / self.magnitude()
+        self.clone() / self.magnitude()
     }
 }
 

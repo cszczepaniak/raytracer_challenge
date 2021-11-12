@@ -1,36 +1,20 @@
-use std::{
-    marker::PhantomData,
-    ops::{Mul, Sub},
-};
+use std::ops::{Index, Mul, Sub};
 
 use crate::utils::f64_fuzzy_eq;
 
-use super::tuple::Tuple;
-
 #[derive(Copy, Clone, Debug)]
-pub struct ColorTuple;
-pub type Color = Tuple<ColorTuple>;
-
-impl Color {
-    pub fn new(r: f64, g: f64, b: f64) -> Self {
-        Tuple(r, g, b, 0.0, PhantomData)
-    }
-
-    pub fn to_bytes(&self) -> (u8, u8, u8) {
-        let scaled = *self * 255.0;
-        (
-            scaled.0.clamp(0.0, 255.0).round() as u8,
-            scaled.1.clamp(0.0, 255.0).round() as u8,
-            scaled.2.clamp(0.0, 255.0).round() as u8,
-        )
-    }
+pub struct Color {
+    data: [f64; 3],
 }
 
-impl PartialEq for Color {
-    fn eq(&self, other: &Self) -> bool {
-        f64_fuzzy_eq(self.0, other.0)
-            && f64_fuzzy_eq(self.1, other.1)
-            && f64_fuzzy_eq(self.2, other.2)
+impl Index<usize> for Color {
+    type Output = f64;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        match index {
+            0..=2 => &self.data[index],
+            _ => panic!("index out of range"),
+        }
     }
 }
 
@@ -38,7 +22,7 @@ impl Sub for Color {
     type Output = Self;
 
     fn sub(self, other: Self) -> Self::Output {
-        Color::new(self.0 - other.0, self.1 - other.1, self.2 - other.2)
+        Color::new(self[0] - other[0], self[1] - other[1], self[2] - other[2])
     }
 }
 
@@ -46,7 +30,38 @@ impl Mul for Color {
     type Output = Self;
 
     fn mul(self, other: Self) -> Self::Output {
-        Color::new(self.0 * other.0, self.1 * other.1, self.2 * other.2)
+        Color::new(self[0] * other[0], self[1] * other[1], self[2] * other[2])
+    }
+}
+
+impl Mul<f64> for Color {
+    type Output = Self;
+
+    fn mul(self, other: f64) -> Self::Output {
+        Color::new(self[0] * other, self[1] * other, self[2] * other)
+    }
+}
+
+impl Color {
+    pub fn new(r: f64, g: f64, b: f64) -> Self {
+        Color { data: [r, g, b] }
+    }
+
+    pub fn to_bytes(&self) -> (u8, u8, u8) {
+        let scaled = self.clone() * 255.0;
+        (
+            scaled[0].clamp(0.0, 255.0).round() as u8,
+            scaled[1].clamp(0.0, 255.0).round() as u8,
+            scaled[2].clamp(0.0, 255.0).round() as u8,
+        )
+    }
+}
+
+impl PartialEq for Color {
+    fn eq(&self, other: &Self) -> bool {
+        f64_fuzzy_eq(self[0], other[0])
+            && f64_fuzzy_eq(self[1], other[1])
+            && f64_fuzzy_eq(self[2], other[2])
     }
 }
 
