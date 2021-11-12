@@ -17,7 +17,7 @@ fn main() {
     );
     let mut canvas = canvas::Canvas::new(700, 450);
     while particle.position.1 >= 0.0 {
-        // println!("{:?}", particle.position);
+        println!("{:?}", particle.position);
         if let Some((x, y)) = particle.pos_in_canvas(&canvas) {
             canvas.write_pixel(x, y, Color::new(1.0, 0.0, 1.0));
         }
@@ -67,11 +67,9 @@ impl Particle {
         {
             return None;
         }
-        let pos = (
+        Some((
             self.position.0.round() as usize,
             canvas.height - 1 - self.position.1.round() as usize,
-        );
-        println!("x: {}, y: {}", pos.0, pos.1);
-        Some(pos)
+        ))
     }
 }
