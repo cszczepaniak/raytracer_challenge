@@ -1,4 +1,4 @@
-use crate::tuples::color::Color;
+use crate::color::Color;
 
 pub struct Canvas {
     pub width: usize,

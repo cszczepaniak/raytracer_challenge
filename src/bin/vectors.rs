@@ -1,6 +1,6 @@
 extern crate raytracer;
 
-use raytracer::tuples::vector::Vector;
+use raytracer::vector::Vector;
 
 fn main() {
     let env = Environment {

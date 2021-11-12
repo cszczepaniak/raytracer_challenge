@@ -2,7 +2,7 @@ extern crate raytracer;
 
 use raytracer::{
     canvas,
-    tuples::{color::Color, vector::Vector},
+    {color::Color, vector::Vector},
 };
 
 fn main() {
