@@ -39,8 +39,6 @@ impl Canvas {
         let mut res = Vec::new();
         let mut pixels_written = 0usize;
         let mut row_width = 0usize;
-        let new_line = "\n".as_bytes();
-        let space = " ".as_bytes();
         for px in self.pixels.iter() {
             let bytes = px.to_bytes();
 
@@ -59,12 +57,12 @@ impl Canvas {
 
                 if row_width + want_to_write > 70 {
                     // wrap at 70 characters
-                    res.extend(new_line);
+                    res.extend(b"\n");
                     row_width = 0;
                 }
 
                 if row_width != 0 {
-                    res.extend(space);
+                    res.extend(b" ");
                     row_width += 1;
                 }
 
@@ -74,7 +72,7 @@ impl Canvas {
             pixels_written += 1;
             if pixels_written == self.width {
                 // wrap after we write a width's worth of pixels
-                res.extend(new_line);
+                res.extend(b"\n");
                 pixels_written = 0;
                 row_width = 0;
             }
