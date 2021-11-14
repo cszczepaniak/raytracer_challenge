@@ -7,7 +7,10 @@ use crate::utils::FuzzyEq;
 
 use super::vector::Vector;
 
-// Define a marker trait for the types we'd like to constrain our matrix to
+// Define a marker trait for the types we'd like to constrain our matrix to.
+// This trait inherits from some subset of the ops that are possible for both
+// f32 and f64 so we can use +, -, *, /, etc. in our generic implementations.
+// We also add an identity function, which we need for the identity matrices.
 pub trait Float:
     Default
     + Copy
