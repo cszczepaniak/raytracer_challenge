@@ -15,6 +15,20 @@ macro_rules! matrix_type {
                 }
                 res
             }
+
+            pub fn transpose(&self) -> Self {
+                let mut res: $name = Default::default();
+                for i in 0..$size {
+                    for j in 0..$size {
+                        res[i][j] = self[j][i];
+                    }
+                }
+                res
+            }
+
+            pub fn invert(&self) -> Self {
+                *self
+            }
         }
 
         impl std::ops::Index<usize> for $name {
@@ -68,11 +82,10 @@ macro_rules! matrix_type {
         }
 
         impl crate::utils::FuzzyEq for $name {
-            fn fuzzy_eq(&self, other: &Self) -> bool {
-                use crate::utils::f64_fuzzy_eq;
+            fn fuzzy_eq(&self, other: Self) -> bool {
                 for i in 0..$size {
                     for j in 0..$size {
-                        if !f64_fuzzy_eq(self[i][j], other[i][j]) {
+                        if !self[i][j].fuzzy_eq(other[i][j]) {
                             return false;
                         }
                     }
@@ -86,6 +99,18 @@ macro_rules! matrix_type {
 matrix_type!(Matrix2, 2);
 matrix_type!(Matrix3, 3);
 matrix_type!(Matrix4, 4);
+
+impl Matrix2 {
+    pub fn det(&self) -> f64 {
+        self[0][0] * self[1][1] - self[1][0] * self[0][1]
+    }
+}
+
+impl Matrix3 {
+    pub fn det(&self) -> f64 {
+        self[0][0] * self[1][1] - self[1][0] * self[0][1]
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -126,11 +151,11 @@ mod tests {
     fn matrix_equality() {
         let m1 = matrix!([1.0, 2.0], [3.0, 4.0]);
         let m2 = matrix!([1.0, 2.0], [3.0, 4.0]);
-        assert_fuzzy_eq!(m1, &m2);
+        assert_fuzzy_eq!(m1, m2);
 
         let m1 = matrix!([1.0, 2.0, 3.0], [3.0, 4.0, 5.0], [5.0, 6.0, 7.0]);
         let m2 = matrix!([1.0, 2.0, 3.0], [3.0, 4.0, 5.0], [5.0, 6.0, 7.0]);
-        assert_fuzzy_eq!(m1, &m2);
+        assert_fuzzy_eq!(m1, m2);
 
         let m1 = matrix!(
             [1.0, 2.0, 3.0, 4.0],
@@ -144,7 +169,7 @@ mod tests {
             [6.0, 7.0, 8.0, 3.0 / 10.0],
             [9.0, 10.0, 11.0, 12.0],
         );
-        assert_fuzzy_eq!(m1, &m2);
+        assert_fuzzy_eq!(m1, m2);
     }
 
     #[test]
@@ -154,14 +179,14 @@ mod tests {
         let exp = Vector::new(5.0, 11.0, 0.0);
         let res = m * v;
 
-        assert_fuzzy_eq!(exp, &res);
+        assert_fuzzy_eq!(exp, res);
 
         let m = matrix!([1.0, 2.0, -5.0], [3.0, 4.0, 1.0], [0.5, 0.6, 1.0]);
         let v = Vector::new(1.0, 2.0, 3.0);
         let exp = Vector::new(-10.0, 14.0, 4.7);
         let res = m * v;
 
-        assert_fuzzy_eq!(exp, &res);
+        assert_fuzzy_eq!(exp, res);
 
         let m = matrix!(
             [1.0, 2.0, 3.0, 4.0],
@@ -173,7 +198,7 @@ mod tests {
         let exp = Vector::new(14.0, 22.0, 32.0);
         let res = m * v;
 
-        assert_fuzzy_eq!(exp, &res);
+        assert_fuzzy_eq!(exp, res);
     }
 
     #[test]
@@ -182,13 +207,13 @@ mod tests {
         let m2 = matrix!([-1.0, -2.0], [3.0, 4.0]);
         let exp = matrix!([5.0, 6.0], [9.0, 10.0]);
 
-        assert_fuzzy_eq!(m1 * m2, &exp);
+        assert_fuzzy_eq!(m1 * m2, exp);
 
         let m1 = matrix!([1.0, 2.0, -5.0], [3.0, 4.0, 1.0], [0.5, 0.6, 1.0]);
         let m2 = matrix!([-1.0, -2.0, 1.0], [3.0, 4.0, 2.0], [1.0, 1.0, 2.5]);
         let exp = matrix!([0.0, 1.0, -7.5], [10.0, 11.0, 13.5], [2.3, 2.4, 4.2]);
 
-        assert_fuzzy_eq!(m1 * m2, &exp);
+        assert_fuzzy_eq!(m1 * m2, exp);
 
         let m1 = matrix!(
             [1.0, 2.0, 3.0, 4.0],
@@ -209,18 +234,38 @@ mod tests {
             [16.0, 26.0, 46.0, 42.0],
         );
 
-        assert_fuzzy_eq!(m1 * m2, &exp);
+        assert_fuzzy_eq!(m1 * m2, exp);
     }
 
     #[test]
     fn matrix_identity_multiplication() {
+        let m = matrix!([1.0, 2.0], [3.0, 4.0]);
+        assert_fuzzy_eq!(Matrix2::identity() * m, m);
+        assert_fuzzy_eq!(m * Matrix2::identity(), m);
+
+        let m = matrix!([1.0, 2.0, -5.0], [3.0, 4.0, 1.0], [0.5, 0.6, 1.0]);
+        assert_fuzzy_eq!(Matrix3::identity() * m, m);
+        assert_fuzzy_eq!(m * Matrix3::identity(), m);
+
+        let m = matrix!(
+            [1.0, 2.0, 3.0, 4.0],
+            [5.0, 6.0, 7.0, 8.0],
+            [9.0, 8.0, 7.0, 6.0],
+            [5.0, 4.0, 3.0, 2.0],
+        );
+        assert_fuzzy_eq!(Matrix4::identity() * m, m);
+        assert_fuzzy_eq!(m * Matrix4::identity(), m);
+    }
+
+    #[test]
+    fn matrix_transpose() {
         let m1 = matrix!([1.0, 2.0], [3.0, 4.0]);
-        assert_fuzzy_eq!(Matrix2::identity() * m1, &m1);
-        assert_fuzzy_eq!(m1 * Matrix2::identity(), &m1);
+        let m2 = matrix!([1.0, 3.0], [2.0, 4.0]);
+        assert_fuzzy_eq!(m1.transpose(), m2);
 
         let m1 = matrix!([1.0, 2.0, -5.0], [3.0, 4.0, 1.0], [0.5, 0.6, 1.0]);
-        assert_fuzzy_eq!(Matrix3::identity() * m1, &m1);
-        assert_fuzzy_eq!(m1 * Matrix3::identity(), &m1);
+        let m2 = matrix!([1.0, 3.0, 0.5], [2.0, 4.0, 0.6], [-5.0, 1.0, 1.0]);
+        assert_fuzzy_eq!(m1.transpose(), m2);
 
         let m1 = matrix!(
             [1.0, 2.0, 3.0, 4.0],
@@ -228,7 +273,28 @@ mod tests {
             [9.0, 8.0, 7.0, 6.0],
             [5.0, 4.0, 3.0, 2.0],
         );
-        assert_fuzzy_eq!(Matrix4::identity() * m1, &m1);
-        assert_fuzzy_eq!(m1 * Matrix4::identity(), &m1);
+        let m2 = matrix!(
+            [1.0, 5.0, 9.0, 5.0],
+            [2.0, 6.0, 8.0, 4.0],
+            [3.0, 7.0, 7.0, 3.0],
+            [4.0, 8.0, 6.0, 2.0],
+        );
+        assert_fuzzy_eq!(m1.transpose(), m2);
+    }
+
+    #[test]
+    fn matrix_determinant() {
+        let m = matrix!([1.0, 5.0], [-3.0, 2.0]);
+        assert_fuzzy_eq!(17.0, m.det());
+    }
+
+    #[test]
+    fn matrix_invert() {
+        let m = matrix!(
+            [1.0, 1.0, 1.0, 1.0],
+            [1.0, 1.0, 1.0, 1.0],
+            [1.0, 1.0, 1.0, 1.0],
+            [1.0, 1.0, 1.0, 1.0],
+        );
     }
 }

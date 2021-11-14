@@ -5,7 +5,7 @@ macro_rules! tuple_type {
             type Output = $type_name;
 
             fn add(self, rhs: Self) -> Self::Output {
-                let mut out = $type_name { data: [0.0; $size] };
+                let mut out: $type_name = Default::default();
                 for i in 0..$size {
                     out.data[i] = self[i] + rhs[i];
                 }
@@ -18,7 +18,7 @@ macro_rules! tuple_type {
             type Output = $type_name;
 
             fn mul(self, rhs: Self) -> Self::Output {
-                let mut out = $type_name { data: [0.0; $size] };
+                let mut out: $type_name = Default::default();
                 for i in 0..$size {
                     out.data[i] = self[i] * rhs[i];
                 }
@@ -34,7 +34,7 @@ macro_rules! tuple_type {
             type Output = $sub_out_type;
 
             fn sub(self, rhs: Self) -> Self::Output {
-                let mut out = $sub_out_type { data: [0.0; $size] };
+                let mut out: $sub_out_type = Default::default();
                 for i in 0..$size {
                     out.data[i] = self[i] - rhs[i];
                 }
@@ -43,7 +43,7 @@ macro_rules! tuple_type {
         }
     };
     ($type_name:ident, $size:literal) => {
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, Debug, Default, PartialEq)]
         pub struct $type_name {
             pub data: [f64; $size],
         }
@@ -69,7 +69,7 @@ macro_rules! tuple_type {
             type Output = $type_name;
 
             fn mul(self, rhs: f64) -> Self::Output {
-                let mut out = Self { data: [0.0; $size] };
+                let mut out: $type_name = Default::default();
                 for i in 0..$size {
                     out.data[i] = self.data[i] * rhs;
                 }
@@ -102,10 +102,9 @@ macro_rules! tuple_type {
         }
 
         impl crate::utils::FuzzyEq for $type_name {
-            fn fuzzy_eq(&self, other: &Self) -> bool {
-                use crate::utils::f64_fuzzy_eq;
+            fn fuzzy_eq(&self, other: Self) -> bool {
                 for i in 0..$size{
-                    if !f64_fuzzy_eq(self[i], other[i]) {
+                    if !self[i].fuzzy_eq(other[i]) {
                         return false;
                     }
                 }

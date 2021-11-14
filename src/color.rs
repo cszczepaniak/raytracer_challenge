@@ -27,13 +27,13 @@ mod tests {
     fn test_multiply_colors() {
         let c1 = Color::new(0.8, 1.0, 1.2);
         let c2 = Color::new(0.4, 0.75, 0.5);
-        assert_fuzzy_eq!(c1 * c2, &Color::new(0.32, 0.75, 0.6))
+        assert_fuzzy_eq!(c1 * c2, Color::new(0.32, 0.75, 0.6))
     }
 
     #[test]
     fn test_sub_colors() {
         let c1 = Color::new(0.8, 0.75, 1.2);
         let c2 = Color::new(0.4, 1.0, 0.5);
-        assert_fuzzy_eq!(c1 - c2, &Color::new(0.4, -0.25, 0.7))
+        assert_fuzzy_eq!(c1 - c2, Color::new(0.4, -0.25, 0.7))
     }
 }

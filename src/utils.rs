@@ -1,9 +1,11 @@
-pub fn f64_fuzzy_eq(a: f64, b: f64) -> bool {
-    (a - b).abs() < 0.00001
+pub trait FuzzyEq: Copy {
+    fn fuzzy_eq(&self, other: Self) -> bool;
 }
 
-pub trait FuzzyEq {
-    fn fuzzy_eq(&self, other: &Self) -> bool;
+impl FuzzyEq for f64 {
+    fn fuzzy_eq(&self, other: Self) -> bool {
+        (self - other).abs() < 0.00001
+    }
 }
 
 #[macro_export]
