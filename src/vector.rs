@@ -1,19 +1,22 @@
-use crate::tuple_type;
+use crate::{float::Float, tuple_type};
 
 tuple_type!(Vector, 4, add, sub);
 
-impl Vector {
-    pub fn new(x: f64, y: f64, z: f64) -> Self {
+impl<T> Vector<T>
+where
+    T: Float,
+{
+    pub fn new(x: T, y: T, z: T) -> Self {
         Vector {
-            data: [x, y, z, 0.0],
+            data: [x, y, z, T::default()],
         }
     }
 
-    pub fn dot(&self, other: &Vector) -> f64 {
+    pub fn dot(&self, other: &Vector<T>) -> T {
         self[0] * other[0] + self[1] * other[1] + self[2] * other[2] + self[3] * other[3]
     }
 
-    pub fn cross(&self, other: &Vector) -> Vector {
+    pub fn cross(&self, other: &Vector<T>) -> Vector<T> {
         Vector::new(
             self[1] * other[2] - self[2] * other[1],
             self[2] * other[0] - self[0] * other[2],
@@ -21,11 +24,11 @@ impl Vector {
         )
     }
 
-    pub fn magnitude(&self) -> f64 {
+    pub fn magnitude(&self) -> T {
         (self[0] * self[0] + self[1] * self[1] + self[2] * self[2]).sqrt()
     }
 
-    pub fn normalize(&self) -> Vector {
+    pub fn normalize(&self) -> Vector<T> {
         self.clone() / self.magnitude()
     }
 }

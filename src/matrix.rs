@@ -1,38 +1,11 @@
 use std::{
     fmt::Debug,
-    ops::{Add, AddAssign, Div, Index, IndexMut, Mul, Neg, Sub},
+    ops::{Index, IndexMut, Mul},
 };
 
-use crate::utils::FuzzyEq;
+use crate::{float::Float, utils::FuzzyEq};
 
 use super::vector::Vector;
-
-// Define a marker trait for the types we'd like to constrain our matrix to.
-// This trait inherits from some subset of the ops that are possible for both
-// f32 and f64 so we can use +, -, *, /, etc. in our generic implementations.
-// We also add an identity function, which we need for the identity matrices.
-pub trait Float:
-    Default
-    + Copy
-    + Add<Output = Self>
-    + Mul<Output = Self>
-    + Div<Output = Self>
-    + Sub<Output = Self>
-    + Neg<Output = Self>
-    + AddAssign<Self>
-{
-    fn identity() -> Self;
-}
-impl Float for f32 {
-    fn identity() -> Self {
-        1.0
-    }
-}
-impl Float for f64 {
-    fn identity() -> Self {
-        1.0
-    }
-}
 
 #[derive(Debug, Copy, Clone)]
 pub struct Matrix<T, const N: usize>
@@ -260,11 +233,14 @@ submatrix_ops!(3, 2);
 
 // We only have 4-element vectors, so let's only implement matrix-vector
 // multiplication for 4x4 matrices.
-impl Mul<Vector> for Matrix<f64, 4> {
-    type Output = Vector;
+impl<T> Mul<Vector<T>> for Matrix<T, 4>
+where
+    T: Float,
+{
+    type Output = Vector<T>;
 
-    fn mul(self, rhs: Vector) -> Self::Output {
-        let mut res = Vector::new(0.0, 0.0, 0.0);
+    fn mul(self, rhs: Vector<T>) -> Self::Output {
+        let mut res = Self::Output::default();
         for i in 0..4 {
             let row = self[i];
             for j in 0..4 {

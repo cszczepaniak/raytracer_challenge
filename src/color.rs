@@ -2,7 +2,7 @@ use crate::tuple_type;
 
 tuple_type!(Color, 3, add, sub, elementwise_mul);
 
-impl Color {
+impl Color<f64> {
     pub fn new(r: f64, g: f64, b: f64) -> Self {
         Color { data: [r, g, b] }
     }

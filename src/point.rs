@@ -1,12 +1,15 @@
 use super::vector::Vector;
-use crate::tuple_type;
+use crate::{float::Float, tuple_type};
 
 tuple_type!(Point, 4, (sub => output = Vector));
 
-impl Point {
-    fn new(x: f64, y: f64, z: f64) -> Self {
+impl<T> Point<T>
+where
+    T: Float,
+{
+    fn new(x: T, y: T, z: T) -> Self {
         Point {
-            data: [x, y, z, 1.0],
+            data: [x, y, z, T::identity()],
         }
     }
 }

@@ -18,20 +18,20 @@ fn main() {
 
 struct Environment {
     // the acceleration of gravity
-    gravity: Vector,
+    gravity: Vector<f64>,
     // the acceleration of the wind
-    wind: Vector,
+    wind: Vector<f64>,
 }
 
 #[derive(Debug)]
 struct Particle {
-    position: Vector,
-    velocity: Vector,
-    acceleration: Vector,
+    position: Vector<f64>,
+    velocity: Vector<f64>,
+    acceleration: Vector<f64>,
 }
 
 impl Particle {
-    fn with_env(env: Environment, initial_pos: Vector, initial_vel: Vector) -> Self {
+    fn with_env(env: Environment, initial_pos: Vector<f64>, initial_vel: Vector<f64>) -> Self {
         Self {
             position: initial_pos,
             velocity: initial_vel,

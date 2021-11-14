@@ -1,11 +1,11 @@
 #[macro_export]
 macro_rules! tuple_type {
     ($type_name:ident, $size:literal, add, BASE) => {
-        impl std::ops::Add for $type_name {
-            type Output = $type_name;
+        impl<T> std::ops::Add for $type_name<T> where T: crate::float::Float {
+            type Output = $type_name<T>;
 
             fn add(self, rhs: Self) -> Self::Output {
-                let mut out: $type_name = Default::default();
+                let mut out: $type_name<T> = Default::default();
                 for i in 0..$size {
                     out.data[i] = self[i] + rhs[i];
                 }
@@ -14,11 +14,11 @@ macro_rules! tuple_type {
         }
     };
     ($type_name:ident, $size:literal, elementwise_mul, BASE) => {
-        impl std::ops::Mul for $type_name {
-            type Output = $type_name;
+        impl<T> std::ops::Mul for $type_name<T> where T: crate::float::Float {
+            type Output = $type_name<T>;
 
             fn mul(self, rhs: Self) -> Self::Output {
-                let mut out: $type_name = Default::default();
+                let mut out: $type_name<T> = Default::default();
                 for i in 0..$size {
                     out.data[i] = self[i] * rhs[i];
                 }
@@ -30,11 +30,11 @@ macro_rules! tuple_type {
         tuple_type!($type_name, $size, (sub => output = $type_name), BASE);
     };
     ($type_name:ident, $size:literal, (sub => output = $sub_out_type:ident), BASE) => {
-        impl std::ops::Sub for $type_name {
-            type Output = $sub_out_type;
+        impl<T> std::ops::Sub for $type_name<T> where T: crate::float::Float {
+            type Output = $sub_out_type<T>;
 
             fn sub(self, rhs: Self) -> Self::Output {
-                let mut out: $sub_out_type = Default::default();
+                let mut out: $sub_out_type<T> = Default::default();
                 for i in 0..$size {
                     out.data[i] = self[i] - rhs[i];
                 }
@@ -44,12 +44,18 @@ macro_rules! tuple_type {
     };
     ($type_name:ident, $size:literal) => {
         #[derive(Clone, Copy, Debug, Default, PartialEq)]
-        pub struct $type_name {
-            pub data: [f64; $size],
+        pub struct $type_name<T>
+        where
+            T: crate::float::Float,
+        {
+            pub data: [T; $size],
         }
 
-        impl std::ops::Index<usize> for $type_name {
-            type Output = f64;
+        impl<T> std::ops::Index<usize> for $type_name<T>
+        where
+            T: crate::float::Float,
+        {
+            type Output = T;
 
             fn index(&self, index: usize) -> &Self::Output {
                 match index {
@@ -59,17 +65,23 @@ macro_rules! tuple_type {
             }
         }
 
-        impl std::ops::IndexMut<usize> for $type_name {
+        impl<T> std::ops::IndexMut<usize> for $type_name<T>
+        where
+            T: crate::float::Float,
+        {
             fn index_mut(&mut self, index: usize) -> &mut Self::Output {
                 &mut self.data[index]
             }
         }
 
-        impl std::ops::Mul<f64> for $type_name {
-            type Output = $type_name;
+        impl<T> std::ops::Mul<T> for $type_name<T>
+        where
+            T: crate::float::Float,
+        {
+            type Output = $type_name<T>;
 
-            fn mul(self, rhs: f64) -> Self::Output {
-                let mut out: $type_name = Default::default();
+            fn mul(self, rhs: T) -> Self::Output {
+                let mut out: $type_name<T> = Default::default();
                 for i in 0..$size {
                     out.data[i] = self.data[i] * rhs;
                 }
@@ -77,34 +89,35 @@ macro_rules! tuple_type {
             }
         }
 
-        impl std::ops::Div<f64> for $type_name {
-            type Output = $type_name;
+        impl<T> std::ops::Div<T> for $type_name<T>
+        where
+            T: crate::float::Float,
+        {
+            type Output = Self;
 
-            fn div(self, rhs: f64) -> Self::Output {
-                1.0 / rhs * self
+            fn div(self, rhs: T) -> Self::Output {
+                self * (T::identity() / rhs)
             }
         }
 
-        impl std::ops::Mul<$type_name> for f64 {
-            type Output = $type_name;
-
-            fn mul(self, rhs: $type_name) -> Self::Output {
-                rhs * self
-            }
-        }
-
-        impl std::ops::Neg for $type_name {
-            type Output = $type_name;
+        impl<T> std::ops::Neg for $type_name<T>
+        where
+            T: crate::float::Float,
+        {
+            type Output = Self;
 
             fn neg(self) -> Self::Output {
-                -1.0 * self
+                self * -T::identity()
             }
         }
 
-        impl crate::utils::FuzzyEq for $type_name {
+        impl<T> crate::utils::FuzzyEq for $type_name<T>
+        where
+            T: crate::float::Float + crate::utils::FuzzyEq,
+        {
             fn fuzzy_eq(&self, other: Self) -> bool {
-                for i in 0..$size{
-                    if !self[i].fuzzy_eq(other[i]) {
+                for i in 0..$size {
+                    if self[i].fuzzy_ne(other[i]) {
                         return false;
                     }
                 }
@@ -113,11 +126,11 @@ macro_rules! tuple_type {
         }
     };
     ($type_name:ident, $size:literal, $($tt:tt),+) => {
-        tuple_type!($type_name, $size);
-        $(
-            tuple_type!($type_name, $size, $tt, BASE);
-        )+
-    };
+           tuple_type!($type_name, $size);
+           $(
+               tuple_type!($type_name, $size, $tt, BASE);
+           )+
+       };
 }
 
 #[cfg(test)]
@@ -156,7 +169,6 @@ mod tests {
             data: [3.0, 6.0, 9.0],
         };
         assert_eq!(exp, t * 3.0);
-        assert_eq!(exp, 3.0 * t,);
     }
 
     #[test]

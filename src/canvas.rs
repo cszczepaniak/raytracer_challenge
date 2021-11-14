@@ -4,7 +4,7 @@ pub struct Canvas {
     pub width: usize,
     pub height: usize,
 
-    pixels: Vec<Color>,
+    pixels: Vec<Color<f64>>,
 }
 
 impl Canvas {
@@ -16,12 +16,12 @@ impl Canvas {
         }
     }
 
-    pub fn write_pixel(&mut self, x: usize, y: usize, c: Color) {
+    pub fn write_pixel(&mut self, x: usize, y: usize, c: Color<f64>) {
         let idx = self.pixel_index_at(x, y);
         self.pixels[idx] = c;
     }
 
-    pub fn read_pixel(&self, x: usize, y: usize) -> Color {
+    pub fn read_pixel(&self, x: usize, y: usize) -> Color<f64> {
         self.pixels[self.pixel_index_at(x, y)]
     }
 
