@@ -32,23 +32,26 @@ impl Float for f64 {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub struct MatrixN<T, const N: usize>
+pub struct Matrix<T, const N: usize>
 where
     T: Float,
 {
     data: [[T; N]; N],
 }
 
-impl<T, const N: usize> From<[[T; N]; N]> for MatrixN<T, N>
+// We can generalize the following trait implementations for _all_ matrices,
+// regardless of type and size.
+
+impl<T, const N: usize> From<[[T; N]; N]> for Matrix<T, N>
 where
     T: Float,
 {
     fn from(data: [[T; N]; N]) -> Self {
-        MatrixN { data }
+        Matrix { data }
     }
 }
 
-impl<T, const N: usize> Default for MatrixN<T, N>
+impl<T, const N: usize> Default for Matrix<T, N>
 where
     T: Float,
 {
@@ -58,7 +61,7 @@ where
     }
 }
 
-impl<T, const N: usize> Index<usize> for MatrixN<T, N>
+impl<T, const N: usize> Index<usize> for Matrix<T, N>
 where
     T: Float,
 {
@@ -69,7 +72,7 @@ where
     }
 }
 
-impl<T, const N: usize> IndexMut<usize> for MatrixN<T, N>
+impl<T, const N: usize> IndexMut<usize> for Matrix<T, N>
 where
     T: Float,
 {
@@ -78,7 +81,7 @@ where
     }
 }
 
-impl<T, const N: usize> Mul for MatrixN<T, N>
+impl<T, const N: usize> Mul for Matrix<T, N>
 where
     T: Float,
 {
@@ -99,7 +102,7 @@ where
     }
 }
 
-impl<T, const N: usize> Mul<T> for MatrixN<T, N>
+impl<T, const N: usize> Mul<T> for Matrix<T, N>
 where
     T: Float,
 {
@@ -116,7 +119,7 @@ where
     }
 }
 
-impl<T, const N: usize> FuzzyEq for MatrixN<T, N>
+impl<T, const N: usize> FuzzyEq for Matrix<T, N>
 where
     T: Float + FuzzyEq,
 {
@@ -132,7 +135,7 @@ where
     }
 }
 
-impl<T, const N: usize> MatrixN<T, N>
+impl<T, const N: usize> Matrix<T, N>
 where
     T: Float,
 {
@@ -155,7 +158,9 @@ where
     }
 }
 
-impl<T> MatrixN<T, 2>
+// The implementation for determinant is special for 2x2.
+// Bigger matricies have a more general solution.
+impl<T> Matrix<T, 2>
 where
     T: Float,
 {
@@ -168,16 +173,12 @@ where
 // not have to write this code twice is to define it as a macro.
 macro_rules! submatrix_ops {
     ($size:literal, $down_size:literal) => {
-        impl<T> MatrixN<T, $size>
+        impl<T> Matrix<T, $size>
         where
             T: Float + FuzzyEq,
         {
-            pub fn submatrix(
-                &self,
-                remove_row: usize,
-                remove_col: usize,
-            ) -> MatrixN<T, $down_size> {
-                let mut res: MatrixN<T, $down_size> = Default::default();
+            pub fn submatrix(&self, remove_row: usize, remove_col: usize) -> Matrix<T, $down_size> {
+                let mut res: Matrix<T, $down_size> = Default::default();
 
                 let mut source_row = 0;
                 let mut source_col = 0;
@@ -254,7 +255,9 @@ macro_rules! submatrix_ops {
 submatrix_ops!(4, 3);
 submatrix_ops!(3, 2);
 
-impl Mul<Vector> for MatrixN<f64, 4> {
+// We only have 4-element vectors, so let's only implement matrix-vector
+// multiplication for 4x4 matrices.
+impl Mul<Vector> for Matrix<f64, 4> {
     type Output = Vector;
 
     fn mul(self, rhs: Vector) -> Self::Output {
@@ -277,21 +280,21 @@ mod tests {
 
     #[test]
     fn matrix_equality() {
-        let m1 = MatrixN::from([[1.0, 2.0], [3.0, 4.0]]);
-        let m2 = MatrixN::from([[1.0, 2.0], [3.0, 4.0]]);
+        let m1 = Matrix::from([[1.0, 2.0], [3.0, 4.0]]);
+        let m2 = Matrix::from([[1.0, 2.0], [3.0, 4.0]]);
         assert_fuzzy_eq!(m1, m2);
 
-        let m1 = MatrixN::from([[1.0, 2.0, 3.0], [3.0, 4.0, 5.0], [5.0, 6.0, 7.0]]);
-        let m2 = MatrixN::from([[1.0, 2.0, 3.0], [3.0, 4.0, 5.0], [5.0, 6.0, 7.0]]);
+        let m1 = Matrix::from([[1.0, 2.0, 3.0], [3.0, 4.0, 5.0], [5.0, 6.0, 7.0]]);
+        let m2 = Matrix::from([[1.0, 2.0, 3.0], [3.0, 4.0, 5.0], [5.0, 6.0, 7.0]]);
         assert_fuzzy_eq!(m1, m2);
 
-        let m1 = MatrixN::from([
+        let m1 = Matrix::from([
             [1.0, 2.0, 3.0, 4.0],
             [3.0, 4.0, 5.0, 6.0],
             [6.0, 7.0, 8.0, 0.3],
             [9.0, 10.0, 11.0, 12.0],
         ]);
-        let m2 = MatrixN::from([
+        let m2 = Matrix::from([
             [1.0, 2.0, 3.0, 4.0],
             [3.0, 4.0, 5.0, 6.0],
             [6.0, 7.0, 8.0, 3.0 / 10.0],
@@ -302,7 +305,7 @@ mod tests {
 
     #[test]
     fn matrix_multiplication_with_vector() {
-        let m = MatrixN::<f64, 4>::from([
+        let m = Matrix::<f64, 4>::from([
             [1.0, 2.0, 3.0, 4.0],
             [2.0, 4.0, 4.0, 2.0],
             [8.0, 6.0, 4.0, 1.0],
@@ -317,31 +320,31 @@ mod tests {
 
     #[test]
     fn matrix_multiplication_with_matrix() {
-        let m1 = MatrixN::from([[1.0, 2.0], [3.0, 4.0]]);
-        let m2 = MatrixN::from([[-1.0, -2.0], [3.0, 4.0]]);
-        let exp = MatrixN::from([[5.0, 6.0], [9.0, 10.0]]);
+        let m1 = Matrix::from([[1.0, 2.0], [3.0, 4.0]]);
+        let m2 = Matrix::from([[-1.0, -2.0], [3.0, 4.0]]);
+        let exp = Matrix::from([[5.0, 6.0], [9.0, 10.0]]);
 
         assert_fuzzy_eq!(exp, m1 * m2);
 
-        let m1 = MatrixN::from([[1.0, 2.0, -5.0], [3.0, 4.0, 1.0], [0.5, 0.6, 1.0]]);
-        let m2 = MatrixN::from([[-1.0, -2.0, 1.0], [3.0, 4.0, 2.0], [1.0, 1.0, 2.5]]);
-        let exp = MatrixN::from([[0.0, 1.0, -7.5], [10.0, 11.0, 13.5], [2.3, 2.4, 4.2]]);
+        let m1 = Matrix::from([[1.0, 2.0, -5.0], [3.0, 4.0, 1.0], [0.5, 0.6, 1.0]]);
+        let m2 = Matrix::from([[-1.0, -2.0, 1.0], [3.0, 4.0, 2.0], [1.0, 1.0, 2.5]]);
+        let exp = Matrix::from([[0.0, 1.0, -7.5], [10.0, 11.0, 13.5], [2.3, 2.4, 4.2]]);
 
         assert_fuzzy_eq!(exp, m1 * m2);
 
-        let m1 = MatrixN::from([
+        let m1 = Matrix::from([
             [1.0, 2.0, 3.0, 4.0],
             [5.0, 6.0, 7.0, 8.0],
             [9.0, 8.0, 7.0, 6.0],
             [5.0, 4.0, 3.0, 2.0],
         ]);
-        let m2 = MatrixN::from([
+        let m2 = Matrix::from([
             [-2.0, 1.0, 2.0, 3.0],
             [3.0, 2.0, 1.0, -1.0],
             [4.0, 3.0, 6.0, 5.0],
             [1.0, 2.0, 7.0, 8.0],
         ]);
-        let exp = MatrixN::from([
+        let exp = Matrix::from([
             [20.0, 22.0, 50.0, 48.0],
             [44.0, 54.0, 114.0, 108.0],
             [40.0, 58.0, 110.0, 102.0],
@@ -353,41 +356,41 @@ mod tests {
 
     #[test]
     fn matrix_identity_multiplication() {
-        let m = MatrixN::from([[1.0, 2.0], [3.0, 4.0]]);
-        assert_fuzzy_eq!(MatrixN::identity() * m, m);
-        assert_fuzzy_eq!(m * MatrixN::identity(), m);
+        let m = Matrix::from([[1.0, 2.0], [3.0, 4.0]]);
+        assert_fuzzy_eq!(Matrix::identity() * m, m);
+        assert_fuzzy_eq!(m * Matrix::identity(), m);
 
-        let m = MatrixN::from([[1.0, 2.0, -5.0], [3.0, 4.0, 1.0], [0.5, 0.6, 1.0]]);
-        assert_fuzzy_eq!(MatrixN::identity() * m, m);
-        assert_fuzzy_eq!(m * MatrixN::identity(), m);
+        let m = Matrix::from([[1.0, 2.0, -5.0], [3.0, 4.0, 1.0], [0.5, 0.6, 1.0]]);
+        assert_fuzzy_eq!(Matrix::identity() * m, m);
+        assert_fuzzy_eq!(m * Matrix::identity(), m);
 
-        let m = MatrixN::from([
+        let m = Matrix::from([
             [1.0, 2.0, 3.0, 4.0],
             [5.0, 6.0, 7.0, 8.0],
             [9.0, 8.0, 7.0, 6.0],
             [5.0, 4.0, 3.0, 2.0],
         ]);
-        assert_fuzzy_eq!(MatrixN::identity() * m, m);
-        assert_fuzzy_eq!(m * MatrixN::identity(), m);
+        assert_fuzzy_eq!(Matrix::identity() * m, m);
+        assert_fuzzy_eq!(m * Matrix::identity(), m);
     }
 
     #[test]
     fn matrix_transpose() {
-        let m1 = MatrixN::from([[1.0, 2.0], [3.0, 4.0]]);
-        let m2 = MatrixN::from([[1.0, 3.0], [2.0, 4.0]]);
+        let m1 = Matrix::from([[1.0, 2.0], [3.0, 4.0]]);
+        let m2 = Matrix::from([[1.0, 3.0], [2.0, 4.0]]);
         assert_fuzzy_eq!(m1.transpose(), m2);
 
-        let m1 = MatrixN::from([[1.0, 2.0, -5.0], [3.0, 4.0, 1.0], [0.5, 0.6, 1.0]]);
-        let m2 = MatrixN::from([[1.0, 3.0, 0.5], [2.0, 4.0, 0.6], [-5.0, 1.0, 1.0]]);
+        let m1 = Matrix::from([[1.0, 2.0, -5.0], [3.0, 4.0, 1.0], [0.5, 0.6, 1.0]]);
+        let m2 = Matrix::from([[1.0, 3.0, 0.5], [2.0, 4.0, 0.6], [-5.0, 1.0, 1.0]]);
         assert_fuzzy_eq!(m1.transpose(), m2);
 
-        let m1 = MatrixN::from([
+        let m1 = Matrix::from([
             [1.0, 2.0, 3.0, 4.0],
             [5.0, 6.0, 7.0, 8.0],
             [9.0, 8.0, 7.0, 6.0],
             [5.0, 4.0, 3.0, 2.0],
         ]);
-        let m2 = MatrixN::from([
+        let m2 = Matrix::from([
             [1.0, 5.0, 9.0, 5.0],
             [2.0, 6.0, 8.0, 4.0],
             [3.0, 7.0, 7.0, 3.0],
@@ -398,10 +401,10 @@ mod tests {
 
     #[test]
     fn matrix_determinant() {
-        let m = MatrixN::from([[1.0, 5.0], [-3.0, 2.0]]);
+        let m = Matrix::from([[1.0, 5.0], [-3.0, 2.0]]);
         assert_fuzzy_eq!(17.0, m.determinant());
 
-        let m = MatrixN::from([[1.0, 2.0, 6.0], [-5.0, 8.0, -4.0], [2.0, 6.0, 4.0]]);
+        let m = Matrix::from([[1.0, 2.0, 6.0], [-5.0, 8.0, -4.0], [2.0, 6.0, 4.0]]);
         let c00 = m.cofactor(0, 0);
         let c01 = m.cofactor(0, 1);
         let c02 = m.cofactor(0, 2);
@@ -413,7 +416,7 @@ mod tests {
         assert_fuzzy_eq!(-46.0, c02);
         assert_fuzzy_eq!(-196.0, det);
 
-        let m = MatrixN::from([
+        let m = Matrix::from([
             [-2.0, -8.0, 3.0, 5.0],
             [-3.0, 1.0, 7.0, 3.0],
             [1.0, 2.0, -9.0, 6.0],
@@ -436,34 +439,34 @@ mod tests {
 
     #[test]
     fn matrix_submatrix() {
-        let m = MatrixN::from([[1.0, 5.0, 0.0], [-3.0, 2.0, 7.0], [0.0, 6.0, 3.0]]);
-        let exp = MatrixN::from([[-3.0, 2.0], [0.0, 6.0]]);
+        let m = Matrix::from([[1.0, 5.0, 0.0], [-3.0, 2.0, 7.0], [0.0, 6.0, 3.0]]);
+        let exp = Matrix::from([[-3.0, 2.0], [0.0, 6.0]]);
         assert_fuzzy_eq!(exp, m.submatrix(0, 2));
-        let exp = MatrixN::from([[1.0, 0.0], [0.0, 3.0]]);
+        let exp = Matrix::from([[1.0, 0.0], [0.0, 3.0]]);
         assert_fuzzy_eq!(exp, m.submatrix(1, 1));
 
-        let m = MatrixN::from([
+        let m = Matrix::from([
             [1.0, 2.0, 3.0, 4.0],
             [2.0, 3.0, 4.0, 5.0],
             [3.0, 4.0, 5.0, 6.0],
             [4.0, 5.0, 6.0, 7.0],
         ]);
-        let exp = MatrixN::from([[1.0, 3.0, 4.0], [3.0, 5.0, 6.0], [4.0, 6.0, 7.0]]);
+        let exp = Matrix::from([[1.0, 3.0, 4.0], [3.0, 5.0, 6.0], [4.0, 6.0, 7.0]]);
         assert_fuzzy_eq!(exp, m.submatrix(1, 1));
-        let exp = MatrixN::from([[1.0, 2.0, 4.0], [2.0, 3.0, 5.0], [3.0, 4.0, 6.0]]);
+        let exp = Matrix::from([[1.0, 2.0, 4.0], [2.0, 3.0, 5.0], [3.0, 4.0, 6.0]]);
         assert_fuzzy_eq!(exp, m.submatrix(3, 2));
     }
 
     #[test]
     fn matrix_minor() {
-        let m = MatrixN::from([[3.0, 5.0, 0.0], [2.0, -1.0, -7.0], [6.0, -1.0, 5.0]]);
+        let m = Matrix::from([[3.0, 5.0, 0.0], [2.0, -1.0, -7.0], [6.0, -1.0, 5.0]]);
         let sub = m.submatrix(1, 0);
         let det = sub.determinant();
         let minor = m.minor(1, 0);
 
         assert_fuzzy_eq!(det, minor);
 
-        let m = MatrixN::from([
+        let m = Matrix::from([
             [1.0, 2.0, 3.0, 4.0],
             [2.0, 3.0, 4.0, 5.0],
             [3.0, 4.0, 5.0, 6.0],
@@ -478,7 +481,7 @@ mod tests {
 
     #[test]
     fn matrix_cofactor() {
-        let m = MatrixN::from([[3.0, 5.0, 0.0], [2.0, -1.0, -7.0], [6.0, -1.0, 5.0]]);
+        let m = Matrix::from([[3.0, 5.0, 0.0], [2.0, -1.0, -7.0], [6.0, -1.0, 5.0]]);
         let minor1 = m.minor(0, 0);
         let minor2 = m.minor(1, 0);
 
@@ -490,7 +493,7 @@ mod tests {
         assert_fuzzy_eq!(25.0, minor2);
         assert_fuzzy_eq!(-25.0, cofactor2);
 
-        let m = MatrixN::from([
+        let m = Matrix::from([
             [-1.0, 2.0, 3.0, 4.0],
             [6.0, 6.0, 7.0, 8.0],
             [9.0, 8.0, -7.0, 6.0],
@@ -510,7 +513,7 @@ mod tests {
 
     #[test]
     fn matrix_invertibility() {
-        let m = MatrixN::from([
+        let m = Matrix::from([
             [6.0, 4.0, 4.0, 4.0],
             [5.0, 5.0, 7.0, 6.0],
             [4.0, -9.0, 3.0, -7.0],
@@ -521,7 +524,7 @@ mod tests {
         assert_fuzzy_eq!(-2120.0, det);
         assert!(m.is_invertible());
 
-        let m = MatrixN::from([
+        let m = Matrix::from([
             [-4.0, 2.0, -2.0, -3.0],
             [9.0, 6.0, 2.0, 6.0],
             [0.0, -5.0, 1.0, -5.0],
@@ -535,7 +538,7 @@ mod tests {
 
     #[test]
     fn matrix_invert() {
-        let m = MatrixN::from([
+        let m = Matrix::from([
             [-5.0, 2.0, 6.0, -8.0],
             [1.0, -5.0, 1.0, 8.0],
             [7.0, 7.0, -6.0, -7.0],
@@ -546,7 +549,7 @@ mod tests {
         let c23 = m.cofactor(2, 3);
         let c32 = m.cofactor(3, 2);
 
-        let exp = MatrixN::from([
+        let exp = Matrix::from([
             [0.21805, 0.45113, 0.24060, -0.04511],
             [-0.80827, -1.45677, -0.44361, 0.52068],
             [-0.07895, -0.22368, -0.05263, 0.19737],
@@ -559,14 +562,14 @@ mod tests {
         assert_fuzzy_eq!(105.0, c32);
         assert_fuzzy_eq!(105.0 / 532.0, act[2][3]);
         assert_fuzzy_eq!(exp, act);
-        assert_fuzzy_eq!(MatrixN::<f64, 4>::identity(), act * m);
-        assert_fuzzy_eq!(MatrixN::<f64, 4>::identity(), m * act);
+        assert_fuzzy_eq!(Matrix::<f64, 4>::identity(), act * m);
+        assert_fuzzy_eq!(Matrix::<f64, 4>::identity(), m * act);
     }
 
     #[test]
     #[should_panic]
     fn matrix_inverse_uninvertible() {
-        let m = MatrixN::from([
+        let m = Matrix::from([
             [-4.0, 2.0, -2.0, -3.0],
             [9.0, 6.0, 2.0, 6.0],
             [0.0, -5.0, 1.0, -5.0],
@@ -577,13 +580,13 @@ mod tests {
 
     #[test]
     fn matrix_inverse_undoes_a_product() {
-        let m1 = MatrixN::from([
+        let m1 = Matrix::from([
             [3.0, -9.0, 7.0, 3.0],
             [3.0, -8.0, 2.0, -9.0],
             [-4.0, 4.0, 4.0, 1.0],
             [-6.0, 5.0, -1.0, 1.0],
         ]);
-        let m2 = MatrixN::from([
+        let m2 = Matrix::from([
             [8.0, 2.0, 2.0, 2.0],
             [3.0, -1.0, 7.0, 0.0],
             [7.0, 0.0, 5.0, 4.0],
