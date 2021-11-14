@@ -1,3 +1,7 @@
+use std::fmt::Debug;
+
+use crate::utils::FuzzyEq;
+
 use super::vector::Vector;
 
 macro_rules! matrix_type {
@@ -24,10 +28,6 @@ macro_rules! matrix_type {
                     }
                 }
                 res
-            }
-
-            pub fn invert(&self) -> Self {
-                *self
             }
         }
 
@@ -66,6 +66,26 @@ macro_rules! matrix_type {
             }
         }
 
+        impl std::ops::Mul<Option<$name>> for $name {
+            type Output = Option<Self>;
+
+            fn mul(self, other: Option<Self>) -> Self::Output {
+                if let Some(o) = other {
+                    Some(self * o)
+                } else {
+                    None
+                }
+            }
+        }
+
+        impl std::ops::Mul<$name> for Option<$name> {
+            type Output = Self;
+
+            fn mul(self, other: $name) -> Self::Output {
+                other * self
+            }
+        }
+
         impl std::ops::Mul<Vector> for $name {
             type Output = Vector;
 
@@ -96,19 +116,97 @@ macro_rules! matrix_type {
     };
 }
 
+macro_rules! submatrix_ops {
+    ($in_type:ident, $in_size:literal, $out_type:ident) => {
+        pub fn submatrix(&self, remove_row: usize, remove_col: usize) -> $out_type {
+            let mut res: $out_type = Default::default();
+
+            let mut source_row = 0;
+            let mut source_col = 0;
+            let mut target_row = 0;
+            let mut target_col = 0;
+
+            while source_row < $in_size {
+                if source_row == remove_row {
+                    source_row += 1;
+                    continue;
+                }
+                while source_col < $in_size {
+                    if source_col == remove_col {
+                        source_col += 1;
+                        continue;
+                    }
+
+                    res[target_row][target_col] = self[source_row][source_col];
+                    source_col += 1;
+                    target_col += 1;
+                }
+                source_row += 1;
+                target_row += 1;
+                source_col = 0;
+                target_col = 0;
+            }
+
+            res
+        }
+
+        pub fn minor(&self, remove_row: usize, remove_col: usize) -> f64 {
+            self.submatrix(remove_row, remove_col).determinant()
+        }
+
+        pub fn cofactor(&self, remove_row: usize, remove_col: usize) -> f64 {
+            let minor = self.minor(remove_row, remove_col);
+            if (remove_row + remove_col) % 2 == 0 {
+                minor
+            } else {
+                -minor
+            }
+        }
+
+        pub fn determinant(&self) -> f64 {
+            let mut res = 0.0;
+            for i in 0..$in_size {
+                res += self[0][i] * self.cofactor(0, i);
+            }
+            res
+        }
+    };
+}
+
 matrix_type!(Matrix2, 2);
 matrix_type!(Matrix3, 3);
 matrix_type!(Matrix4, 4);
 
 impl Matrix2 {
-    pub fn det(&self) -> f64 {
+    pub fn determinant(&self) -> f64 {
         self[0][0] * self[1][1] - self[1][0] * self[0][1]
     }
 }
 
 impl Matrix3 {
-    pub fn det(&self) -> f64 {
-        self[0][0] * self[1][1] - self[1][0] * self[0][1]
+    submatrix_ops!(Matrix3, 3, Matrix2);
+}
+
+impl Matrix4 {
+    submatrix_ops!(Matrix4, 4, Matrix3);
+
+    pub fn is_invertible(&self) -> bool {
+        self.determinant().fuzzy_ne(0.0)
+    }
+
+    pub fn inverse(&self) -> Self {
+        if !self.is_invertible() {
+            panic!("matrix is not invertible")
+        }
+        let mut res: Matrix4 = Default::default();
+        let det = self.determinant();
+        for i in 0..4 {
+            for j in 0..4 {
+                // transpose as we go
+                res[j][i] = self.cofactor(i, j) / det;
+            }
+        }
+        res
     }
 }
 
@@ -207,13 +305,13 @@ mod tests {
         let m2 = matrix!([-1.0, -2.0], [3.0, 4.0]);
         let exp = matrix!([5.0, 6.0], [9.0, 10.0]);
 
-        assert_fuzzy_eq!(m1 * m2, exp);
+        assert_fuzzy_eq!(exp, m1 * m2);
 
         let m1 = matrix!([1.0, 2.0, -5.0], [3.0, 4.0, 1.0], [0.5, 0.6, 1.0]);
         let m2 = matrix!([-1.0, -2.0, 1.0], [3.0, 4.0, 2.0], [1.0, 1.0, 2.5]);
         let exp = matrix!([0.0, 1.0, -7.5], [10.0, 11.0, 13.5], [2.3, 2.4, 4.2]);
 
-        assert_fuzzy_eq!(m1 * m2, exp);
+        assert_fuzzy_eq!(exp, m1 * m2);
 
         let m1 = matrix!(
             [1.0, 2.0, 3.0, 4.0],
@@ -234,7 +332,7 @@ mod tests {
             [16.0, 26.0, 46.0, 42.0],
         );
 
-        assert_fuzzy_eq!(m1 * m2, exp);
+        assert_fuzzy_eq!(exp, m1 * m2);
     }
 
     #[test]
@@ -285,16 +383,200 @@ mod tests {
     #[test]
     fn matrix_determinant() {
         let m = matrix!([1.0, 5.0], [-3.0, 2.0]);
-        assert_fuzzy_eq!(17.0, m.det());
+        assert_fuzzy_eq!(17.0, m.determinant());
+
+        let m = matrix!([1.0, 2.0, 6.0], [-5.0, 8.0, -4.0], [2.0, 6.0, 4.0]);
+        let c00 = m.cofactor(0, 0);
+        let c01 = m.cofactor(0, 1);
+        let c02 = m.cofactor(0, 2);
+
+        let det = m.determinant();
+
+        assert_fuzzy_eq!(56.0, c00);
+        assert_fuzzy_eq!(12.0, c01);
+        assert_fuzzy_eq!(-46.0, c02);
+        assert_fuzzy_eq!(-196.0, det);
+
+        let m = matrix!(
+            [-2.0, -8.0, 3.0, 5.0],
+            [-3.0, 1.0, 7.0, 3.0],
+            [1.0, 2.0, -9.0, 6.0],
+            [-6.0, 7.0, 7.0, -9.0],
+        );
+
+        let c00 = m.cofactor(0, 0);
+        let c01 = m.cofactor(0, 1);
+        let c02 = m.cofactor(0, 2);
+        let c03 = m.cofactor(0, 3);
+
+        let det = m.determinant();
+
+        assert_fuzzy_eq!(690.0, c00);
+        assert_fuzzy_eq!(447.0, c01);
+        assert_fuzzy_eq!(210.0, c02);
+        assert_fuzzy_eq!(51.0, c03);
+        assert_fuzzy_eq!(-4071.0, det);
+    }
+
+    #[test]
+    fn matrix_submatrix() {
+        let m = matrix!([1.0, 5.0, 0.0], [-3.0, 2.0, 7.0], [0.0, 6.0, 3.0]);
+        let exp = matrix!([-3.0, 2.0], [0.0, 6.0]);
+        assert_fuzzy_eq!(exp, m.submatrix(0, 2));
+        let exp = matrix!([1.0, 0.0], [0.0, 3.0]);
+        assert_fuzzy_eq!(exp, m.submatrix(1, 1));
+
+        let m = matrix!(
+            [1.0, 2.0, 3.0, 4.0],
+            [2.0, 3.0, 4.0, 5.0],
+            [3.0, 4.0, 5.0, 6.0],
+            [4.0, 5.0, 6.0, 7.0],
+        );
+        let exp = matrix!([1.0, 3.0, 4.0], [3.0, 5.0, 6.0], [4.0, 6.0, 7.0],);
+        assert_fuzzy_eq!(exp, m.submatrix(1, 1));
+        let exp = matrix!([1.0, 2.0, 4.0], [2.0, 3.0, 5.0], [3.0, 4.0, 6.0],);
+        assert_fuzzy_eq!(exp, m.submatrix(3, 2));
+    }
+
+    #[test]
+    fn matrix_minor() {
+        let m = matrix!([3.0, 5.0, 0.0], [2.0, -1.0, -7.0], [6.0, -1.0, 5.0]);
+        let sub = m.submatrix(1, 0);
+        let det = sub.determinant();
+        let minor = m.minor(1, 0);
+
+        assert_fuzzy_eq!(det, minor);
+
+        let m = matrix!(
+            [1.0, 2.0, 3.0, 4.0],
+            [2.0, 3.0, 4.0, 5.0],
+            [3.0, 4.0, 5.0, 6.0],
+            [4.0, 5.0, 6.0, 7.0],
+        );
+        let sub = m.submatrix(2, 3);
+        let det = sub.determinant();
+        let minor = m.minor(2, 3);
+
+        assert_fuzzy_eq!(det, minor);
+    }
+
+    #[test]
+    fn matrix_cofactor() {
+        let m = matrix!([3.0, 5.0, 0.0], [2.0, -1.0, -7.0], [6.0, -1.0, 5.0]);
+        let minor1 = m.minor(0, 0);
+        let minor2 = m.minor(1, 0);
+
+        let cofactor1 = m.cofactor(0, 0);
+        let cofactor2 = m.cofactor(1, 0);
+
+        assert_fuzzy_eq!(-12.0, minor1);
+        assert_fuzzy_eq!(-12.0, cofactor1);
+        assert_fuzzy_eq!(25.0, minor2);
+        assert_fuzzy_eq!(-25.0, cofactor2);
+
+        let m = matrix!(
+            [-1.0, 2.0, 3.0, 4.0],
+            [6.0, 6.0, 7.0, 8.0],
+            [9.0, 8.0, -7.0, 6.0],
+            [5.0, 4.0, 3.0, 2.0],
+        );
+        let minor1 = m.minor(1, 3);
+        let minor2 = m.minor(1, 2);
+
+        let cofactor1 = m.cofactor(1, 3);
+        let cofactor2 = m.cofactor(1, 2);
+
+        assert_fuzzy_eq!(-188.0, minor1);
+        assert_fuzzy_eq!(-188.0, cofactor1);
+        assert_fuzzy_eq!(16.0, minor2);
+        assert_fuzzy_eq!(-16.0, cofactor2);
+    }
+
+    #[test]
+    fn matrix_invertibility() {
+        let m = matrix!(
+            [6.0, 4.0, 4.0, 4.0],
+            [5.0, 5.0, 7.0, 6.0],
+            [4.0, -9.0, 3.0, -7.0],
+            [9.0, 1.0, 7.0, -6.0],
+        );
+
+        let det = m.determinant();
+        assert_fuzzy_eq!(-2120.0, det);
+        assert!(m.is_invertible());
+
+        let m = matrix!(
+            [-4.0, 2.0, -2.0, -3.0],
+            [9.0, 6.0, 2.0, 6.0],
+            [0.0, -5.0, 1.0, -5.0],
+            [0.0, 0.0, 0.0, 0.0],
+        );
+
+        let det = m.determinant();
+        assert_fuzzy_eq!(0.0, det);
+        assert!(!m.is_invertible());
     }
 
     #[test]
     fn matrix_invert() {
         let m = matrix!(
-            [1.0, 1.0, 1.0, 1.0],
-            [1.0, 1.0, 1.0, 1.0],
-            [1.0, 1.0, 1.0, 1.0],
-            [1.0, 1.0, 1.0, 1.0],
+            [-5.0, 2.0, 6.0, -8.0],
+            [1.0, -5.0, 1.0, 8.0],
+            [7.0, 7.0, -6.0, -7.0],
+            [1.0, -3.0, 7.0, 4.0],
         );
+
+        let det = m.determinant();
+        let c23 = m.cofactor(2, 3);
+        let c32 = m.cofactor(3, 2);
+
+        let exp = matrix!(
+            [0.21805, 0.45113, 0.24060, -0.04511],
+            [-0.80827, -1.45677, -0.44361, 0.52068],
+            [-0.07895, -0.22368, -0.05263, 0.19737],
+            [-0.52256, -0.81391, -0.30075, 0.30639],
+        );
+        let act = m.inverse();
+        assert_fuzzy_eq!(532.0, det);
+        assert_fuzzy_eq!(-160.0, c23);
+        assert_fuzzy_eq!(-160.0 / 532.0, act[3][2]);
+        assert_fuzzy_eq!(105.0, c32);
+        assert_fuzzy_eq!(105.0 / 532.0, act[2][3]);
+        assert_fuzzy_eq!(exp, act);
+        assert_fuzzy_eq!(Matrix4::identity(), act * m);
+        assert_fuzzy_eq!(Matrix4::identity(), m * act);
+    }
+
+    #[test]
+    #[should_panic]
+    fn matrix_inverse_uninvertible() {
+        let m = matrix!(
+            [-4.0, 2.0, -2.0, -3.0],
+            [9.0, 6.0, 2.0, 6.0],
+            [0.0, -5.0, 1.0, -5.0],
+            [0.0, 0.0, 0.0, 0.0],
+        );
+        let _ = m.inverse();
+    }
+
+    #[test]
+    fn matrix_inverse_undoes_a_product() {
+        let m1 = matrix!(
+            [3.0, -9.0, 7.0, 3.0],
+            [3.0, -8.0, 2.0, -9.0],
+            [-4.0, 4.0, 4.0, 1.0],
+            [-6.0, 5.0, -1.0, 1.0],
+        );
+        let m2 = matrix!(
+            [8.0, 2.0, 2.0, 2.0],
+            [3.0, -1.0, 7.0, 0.0],
+            [7.0, 0.0, 5.0, 4.0],
+            [6.0, -2.0, 0.0, 5.0],
+        );
+
+        let m3 = m1 * m2;
+
+        let act = m3 * m2.inverse();
+        assert_fuzzy_eq!(m1, act);
     }
 }

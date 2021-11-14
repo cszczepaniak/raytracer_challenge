@@ -1,5 +1,8 @@
 pub trait FuzzyEq: Copy {
     fn fuzzy_eq(&self, other: Self) -> bool;
+    fn fuzzy_ne(&self, other: Self) -> bool {
+        !self.fuzzy_eq(other)
+    }
 }
 
 impl FuzzyEq for f64 {
