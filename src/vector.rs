@@ -1,68 +1,6 @@
-use std::ops;
+use crate::tuple_type;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Vector {
-    data: [f64; 4],
-}
-
-impl ops::Index<usize> for Vector {
-    type Output = f64;
-
-    fn index(&self, index: usize) -> &Self::Output {
-        match index {
-            0..=3 => &self.data[index],
-            _ => panic!("index out of range"),
-        }
-    }
-}
-
-impl ops::Add for Vector {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        Vector::new(self[0] + rhs[0], self[1] + rhs[1], self[2] + rhs[2])
-    }
-}
-
-impl ops::Sub for Vector {
-    type Output = Self;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        Vector::new(self[0] - rhs[0], self[1] - rhs[1], self[2] - rhs[2])
-    }
-}
-
-impl ops::Mul<f64> for Vector {
-    type Output = Vector;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Vector::new(self[0] * rhs, self[1] * rhs, self[2] * rhs)
-    }
-}
-
-impl ops::Mul<Vector> for f64 {
-    type Output = Vector;
-
-    fn mul(self, rhs: Vector) -> Self::Output {
-        rhs * self
-    }
-}
-
-impl ops::Div<f64> for Vector {
-    type Output = Vector;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        1.0 / rhs * self
-    }
-}
-
-impl ops::Neg for Vector {
-    type Output = Vector;
-
-    fn neg(self) -> Self::Output {
-        -1.0 * self
-    }
-}
+tuple_type!(Vector, 4, add, sub);
 
 impl Vector {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
@@ -95,13 +33,6 @@ impl Vector {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_sub_vecs() {
-        let v1 = Vector::new(1.0, 2.0, 3.0);
-        let v2 = Vector::new(2.0, 3.0, -4.0);
-        assert_eq!(v1 - v2, Vector::new(-1.0, -1.0, 7.0));
-    }
 
     macro_rules! dot_tests {
         ($($name:ident: $value:expr,)*) => {

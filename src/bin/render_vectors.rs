@@ -1,5 +1,7 @@
 extern crate raytracer;
 
+use std::fs;
+
 use raytracer::{
     canvas,
     {color::Color, vector::Vector},
@@ -27,7 +29,7 @@ fn main() {
 
     println!("Saving to file...");
 
-    std::fs::write("output.ppm", canvas.to_ppm()).expect("error writing to file");
+    fs::write("output.ppm", canvas.to_ppm()).expect("error writing to file");
 }
 
 struct Environment {
