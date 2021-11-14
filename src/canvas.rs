@@ -12,7 +12,7 @@ impl Canvas {
         Canvas {
             width,
             height,
-            pixels: vec![Color::new(0.0, 0.0, 0.0); width * height],
+            pixels: vec![Color::default(); width * height],
         }
     }
 
@@ -40,13 +40,9 @@ impl Canvas {
         let mut pixels_written = 0usize;
         let mut row_width = 0usize;
         for px in self.pixels.iter() {
-            let bytes = px.to_bytes();
+            let (r, g, b) = px.to_bytes();
 
-            for comp in [
-                format!("{}", bytes.0),
-                format!("{}", bytes.1),
-                format!("{}", bytes.2),
-            ] {
+            for comp in [format!("{}", r), format!("{}", g), format!("{}", b)] {
                 let want_to_write = if row_width == 0 {
                     // at the beginning of a row, we don't write the leading space
                     comp.len()
