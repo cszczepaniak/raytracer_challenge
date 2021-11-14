@@ -1,0 +1,80 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in library 'raytracer'",
+      "cargo": {
+        "args": ["test", "--no-run", "--lib", "--package=raytracer"],
+        "filter": {
+          "name": "raytracer",
+          "kind": "lib"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug executable 'render_vectors'",
+      "cargo": {
+        "args": ["build", "--bin=render_vectors", "--package=raytracer"],
+        "filter": {
+          "name": "render_vectors",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in executable 'render_vectors'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--bin=render_vectors",
+          "--package=raytracer"
+        ],
+        "filter": {
+          "name": "render_vectors",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug executable 'vectors'",
+      "cargo": {
+        "args": ["build", "--bin=vectors", "--package=raytracer"],
+        "filter": {
+          "name": "vectors",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in executable 'vectors'",
+      "cargo": {
+        "args": ["test", "--no-run", "--bin=vectors", "--package=raytracer"],
+        "filter": {
+          "name": "vectors",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}
