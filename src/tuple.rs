@@ -59,6 +59,12 @@ macro_rules! tuple_type {
             }
         }
 
+        impl std::ops::IndexMut<usize> for $type_name {
+            fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+                &mut self.data[index]
+            }
+        }
+
         impl std::ops::Mul<f64> for $type_name {
             type Output = $type_name;
 
@@ -92,6 +98,18 @@ macro_rules! tuple_type {
 
             fn neg(self) -> Self::Output {
                 -1.0 * self
+            }
+        }
+
+        impl crate::utils::FuzzyEq for $type_name {
+            fn fuzzy_eq(&self, other: &Self) -> bool {
+                use crate::utils::f64_fuzzy_eq;
+                for i in 0..$size{
+                    if !f64_fuzzy_eq(self[i], other[i]) {
+                        return false;
+                    }
+                }
+                true
             }
         }
     };

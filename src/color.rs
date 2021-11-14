@@ -1,5 +1,4 @@
 use crate::tuple_type;
-use crate::utils::{f64_fuzzy_eq, FuzzyEq};
 
 tuple_type!(Color, 3, add, sub, elementwise_mul);
 
@@ -18,19 +17,11 @@ impl Color {
     }
 }
 
-impl FuzzyEq for Color {
-    fn fuzzy_eq(&self, other: &Self) -> bool {
-        f64_fuzzy_eq(self[0], other[0])
-            && f64_fuzzy_eq(self[1], other[1])
-            && f64_fuzzy_eq(self[2], other[2])
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::assert_fuzzy_eq;
-
     use super::*;
+    use crate::assert_fuzzy_eq;
+    use crate::utils::FuzzyEq;
 
     #[test]
     fn test_multiply_colors() {

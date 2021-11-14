@@ -9,6 +9,6 @@ pub trait FuzzyEq {
 #[macro_export]
 macro_rules! assert_fuzzy_eq {
     ($x:expr, $y:expr) => {
-        assert!(($x).fuzzy_eq(($y)))
+        assert!(($x).fuzzy_eq(($y)), "want: {:?}, got: {:?}", $x, $y);
     };
 }
