@@ -185,14 +185,17 @@ where
 mod tests {
 
     use crate::assert_fuzzy_eq;
+    use crate::utils::FuzzyEq;
 
     use super::*;
 
+    #[derive(Clone, Copy, Debug)]
     struct TestTuple {}
+    type Test<T> = Tuple<T, TestTuple, 4>;
 
     #[test]
     fn test_mut_indexing() {
-        let mut t = Tuple::<f64, TestTuple, 4>::default();
+        let mut t = Test::<f64>::default();
         t[0] = 1.0;
         t[1] = 2.0;
         t[2] = 3.0;
@@ -203,81 +206,81 @@ mod tests {
 
     #[test]
     fn test_indexing() {
-        let t = Tuple::<f64, TestTuple, 3>::from([1.0, 2.0, 3.0]);
-        assert_fuzzy_eq!([1.0, 2.0, 3.0], t.data);
-    }
-
-    #[test]
-    fn test_from_array() {
-        let t = Tuple::<f64, TestTuple, 3>::from([1.0, 2.0, 3.0]);
-
-        assert_eq!(1.0, t[0]);
-        assert_eq!(2.0, t[1]);
-        assert_eq!(3.0, t[2]);
+        let t = Test::from([1.0, 2.0, 3.0, 4.0]);
+        assert_fuzzy_eq!(1.0, t[0]);
+        assert_fuzzy_eq!(2.0, t[1]);
+        assert_fuzzy_eq!(3.0, t[2]);
+        assert_fuzzy_eq!(4.0, t[3]);
     }
 
     #[test]
     #[should_panic(expected = "index out of bounds")]
     fn test_indexing_out_of_bounds() {
-        let t = Tuple::<f64, TestTuple, 4>::default();
+        let t = Test::<f64>::default();
         let _ = t[5];
     }
 
     #[test]
     #[should_panic(expected = "index out of bounds")]
     fn test_mut_indexing_out_of_bounds() {
-        let mut t = Tuple::<f64, TestTuple, 4>::default();
+        let mut t = Test::<f64>::default();
         t[5] = 6.0;
     }
 
     #[test]
     fn test_scalar_mult() {
-        let mut t = Tuple::<f64, TestTuple, 4>::from([1.0, 1.0, 1.0, 1.0]);
+        let mut t = Test::from([1.0, 1.0, 1.0, 1.0]);
         t = t * 0.5;
-        assert_fuzzy_eq!([0.5, 0.5, 0.5, 0.5], t.data);
+        assert_fuzzy_eq!(Test::from([0.5, 0.5, 0.5, 0.5]), t);
     }
 
     #[test]
     fn test_div() {
-        let mut t = Tuple::<f64, TestTuple, 4>::from([1.0, 1.0, 1.0, 1.0]);
+        let mut t = Test::from([1.0, 1.0, 1.0, 1.0]);
         t = t / 0.5;
-        assert_fuzzy_eq!([2.0, 2.0, 2.0, 2.0], t.data);
+        assert_fuzzy_eq!(Test::from([2.0, 2.0, 2.0, 2.0]), t);
     }
 
     #[test]
     fn test_neg() {
-        let mut t = Tuple::<f64, TestTuple, 4>::from([1.0, 1.0, 1.0, 1.0]);
+        let mut t = Test::from([1.0, 1.0, 1.0, 1.0]);
         t = -t;
-        assert_fuzzy_eq!([-1.0, -1.0, -1.0, -1.0], t.data);
+        assert_fuzzy_eq!(Test::from([-1.0, -1.0, -1.0, -1.0]), t);
     }
 
     #[test]
     fn test_add() {
         impl TupleAdd for TestTuple {}
 
-        let t1 = Tuple::<f64, TestTuple, 4>::from([1.0, 1.0, 1.0, 1.0]);
-        let t2 = Tuple::<f64, TestTuple, 4>::from([1.0, 2.0, 3.0, 4.0]);
+        let t1 = Test::from([1.0, 1.0, 1.0, 1.0]);
+        let t2 = Test::from([1.0, 2.0, 3.0, 4.0]);
         let res = t1 + t2;
-        assert_fuzzy_eq!([2.0, 3.0, 4.0, 5.0], res.data);
+        assert_fuzzy_eq!(Test::from([2.0, 3.0, 4.0, 5.0]), res);
     }
 
     #[test]
     fn test_elementwise_mul() {
         impl ElementwiseMul for TestTuple {}
 
-        let t1 = Tuple::<f64, TestTuple, 4>::from([-4.0, 3.0, -2.0, 1.0]);
-        let t2 = Tuple::<f64, TestTuple, 4>::from([1.0, 2.0, 3.0, 4.0]);
+        let t1 = Test::from([-4.0, 3.0, -2.0, 1.0]);
+        let t2 = Test::from([1.0, 2.0, 3.0, 4.0]);
         let res = t1 * t2;
-        assert_fuzzy_eq!([-4.0, 6.0, -6.0, 4.0], res.data);
+        assert_fuzzy_eq!(Test::from([-4.0, 6.0, -6.0, 4.0]), res);
     }
 
     #[test]
     fn test_sub() {
         impl TupleSub for TestTuple {}
 
-        let t1 = Tuple::<f64, TestTuple, 4>::from([-4.0, 3.0, -2.0, 1.0]);
-        let t2 = Tuple::<f64, TestTuple, 4>::from([1.0, 2.0, 3.0, 4.0]);
+        let t1 = Test::from([-4.0, 3.0, -2.0, 1.0]);
+        let t2 = Test::from([1.0, 2.0, 3.0, 4.0]);
         let res = t1 - t2;
-        assert_fuzzy_eq!([-5.0, 1.0, -5.0, -3.0], res.data);
+        assert_fuzzy_eq!(Test::from([-5.0, 1.0, -5.0, -3.0]), res);
+    }
+
+    #[test]
+    fn test_f32() {
+        let t = Test::from([1.0f32, 1.0, 1.0, 1.0]);
+        assert_fuzzy_eq!([1.0f32, 1.0, 1.0, 1.0], t.data);
     }
 }
