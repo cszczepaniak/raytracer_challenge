@@ -1,6 +1,6 @@
 use num_traits::Float;
 
-use crate::tuple::{GenericTuple, TupleAdd, TupleSub};
+use crate::tuple::{Tuple, TupleAdd, TupleSub};
 
 #[derive(Clone, Copy, Debug)]
 pub struct VectTuple {}
@@ -9,7 +9,7 @@ pub struct VectTuple {}
 impl TupleAdd for VectTuple {}
 impl TupleSub for VectTuple {}
 
-pub type Vector<T> = GenericTuple<T, VectTuple, 4>;
+pub type Vector<T> = Tuple<T, VectTuple, 4>;
 
 impl<T> Vector<T>
 where

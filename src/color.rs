@@ -1,4 +1,4 @@
-use crate::tuple::{ElementwiseMul, GenericTuple, TupleSub};
+use crate::tuple::{ElementwiseMul, Tuple, TupleSub};
 
 #[derive(Clone, Copy, Debug)]
 pub struct ColorTuple {}
@@ -7,7 +7,7 @@ pub struct ColorTuple {}
 impl TupleSub for ColorTuple {}
 impl ElementwiseMul for ColorTuple {}
 
-pub type Color = GenericTuple<f64, ColorTuple, 3>;
+pub type Color = Tuple<f64, ColorTuple, 3>;
 
 impl Color {
     pub fn new(r: f64, g: f64, b: f64) -> Self {

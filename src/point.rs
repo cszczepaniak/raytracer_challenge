@@ -1,10 +1,10 @@
 use num_traits::Float;
 
 use super::vector::Vector;
-use crate::tuple::GenericTuple;
+use crate::tuple::Tuple;
 
 pub struct PointStruct {}
-type Point<T> = GenericTuple<T, PointStruct, 4>;
+type Point<T> = Tuple<T, PointStruct, 4>;
 
 impl<T> std::ops::Sub for Point<T>
 where
