@@ -1,15 +1,23 @@
-use crate::{float::Float, tuple_type};
+use crate::{
+    float::Float,
+    tuple::{GenericTuple, TupleAdd, TupleSub},
+};
 
-tuple_type!(Vector, 4, add, sub);
+#[derive(Clone, Copy, Debug)]
+pub struct VectTuple {}
+
+// Vectors can add and subtract
+impl TupleAdd for VectTuple {}
+impl TupleSub for VectTuple {}
+
+pub type Vector<T> = GenericTuple<T, VectTuple, 4>;
 
 impl<T> Vector<T>
 where
     T: Float,
 {
     pub fn new(x: T, y: T, z: T) -> Self {
-        Vector {
-            data: [x, y, z, T::default()],
-        }
+        Vector::from([x, y, z, T::default()])
     }
 
     pub fn dot(&self, other: &Vector<T>) -> T {
@@ -29,13 +37,16 @@ where
     }
 
     pub fn normalize(&self) -> Vector<T> {
-        self.clone() / self.magnitude()
+        let mag = self.magnitude();
+        Vector::new(self[0], self[1], self[2]) / mag
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::assert_fuzzy_eq;
+    use crate::utils::FuzzyEq;
 
     macro_rules! dot_tests {
         ($($name:ident: $value:expr,)*) => {
@@ -61,8 +72,8 @@ mod tests {
                 #[test]
                 fn $name() {
                     let (input1, input2, expected) = $value;
-                    assert_eq!(input1.cross(&input2), expected);
-                    assert_eq!(input2.cross(&input1), -expected);
+                    assert_fuzzy_eq!(input1.cross(&input2), expected);
+                    assert_fuzzy_eq!(input2.cross(&input1), -expected);
                 }
             )*
         };
@@ -96,8 +107,8 @@ mod tests {
                 #[test]
                 fn $name() {
                     let (input, expected) = $value;
-                    assert_eq!(input.normalize(), expected);
-                    assert_eq!(input.normalize().magnitude(), 1.0);
+                    assert_fuzzy_eq!(input.normalize(), expected);
+                    assert_fuzzy_eq!(input.normalize().magnitude(), 1.0);
                 }
             )*
         };

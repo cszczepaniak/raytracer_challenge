@@ -1,10 +1,17 @@
-use crate::tuple_type;
+use crate::tuple::{ElementwiseMul, GenericTuple, TupleSub};
 
-tuple_type!(Color, 3, add, sub, elementwise_mul);
+#[derive(Clone, Copy, Debug)]
+pub struct ColorTuple {}
 
-impl Color<f64> {
+// Colors can subtract and elementwise multiply
+impl TupleSub for ColorTuple {}
+impl ElementwiseMul for ColorTuple {}
+
+pub type Color = GenericTuple<f64, ColorTuple, 3>;
+
+impl Color {
     pub fn new(r: f64, g: f64, b: f64) -> Self {
-        Color { data: [r, g, b] }
+        Color::from([r, g, b])
     }
 
     pub fn to_bytes(&self) -> (u8, u8, u8) {

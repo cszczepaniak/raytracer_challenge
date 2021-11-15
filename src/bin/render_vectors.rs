@@ -10,7 +10,7 @@ use raytracer::{
 fn main() {
     let env = Environment {
         gravity: Vector::new(0.0, -0.2, 0.0),
-        wind: Vector::new(-0.05, 0.0, 0.0),
+        wind: Vector::new(-0.02, 0.0, 0.0),
     };
     let mut particle = Particle::with_env(
         env,
@@ -21,7 +21,7 @@ fn main() {
     while particle.position[1] >= 0.0 {
         println!("{:?}", particle.position);
         if let Some((x, y)) = particle.pos_in_canvas(&canvas) {
-            canvas.write_pixel(x, y, Color::new(1.0, 0.0, 1.0));
+            canvas.write_pixel(x, y, Color::new(0.0, 1.0, 0.0));
         }
         particle.step();
     }

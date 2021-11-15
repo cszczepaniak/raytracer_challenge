@@ -4,7 +4,7 @@ pub struct Canvas {
     pub width: usize,
     pub height: usize,
 
-    pixels: Vec<Color<f64>>,
+    pixels: Vec<Color>,
 }
 
 impl Canvas {
@@ -16,12 +16,12 @@ impl Canvas {
         }
     }
 
-    pub fn write_pixel(&mut self, x: usize, y: usize, c: Color<f64>) {
+    pub fn write_pixel(&mut self, x: usize, y: usize, c: Color) {
         let idx = self.pixel_index_at(x, y);
         self.pixels[idx] = c;
     }
 
-    pub fn read_pixel(&self, x: usize, y: usize) -> Color<f64> {
+    pub fn read_pixel(&self, x: usize, y: usize) -> Color {
         self.pixels[self.pixel_index_at(x, y)]
     }
 
@@ -93,6 +93,8 @@ impl Canvas {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::assert_fuzzy_eq;
+    use crate::utils::FuzzyEq;
 
     #[test]
     fn test_create_canvas() {
@@ -102,7 +104,7 @@ mod tests {
         assert_eq!(c.height, 20);
         for i in 0..10 {
             for j in 0..20 {
-                assert_eq!(c.read_pixel(i, j), Color::new(0.0, 0.0, 0.0));
+                assert_fuzzy_eq!(c.read_pixel(i, j), Color::new(0.0, 0.0, 0.0));
             }
         }
     }
@@ -125,7 +127,7 @@ mod tests {
                     (7, 7) => blue,
                     _ => Color::new(0.0, 0.0, 0.0),
                 };
-                assert_eq!(c.read_pixel(i, j), exp_color);
+                assert_fuzzy_eq!(c.read_pixel(i, j), exp_color);
             }
         }
     }

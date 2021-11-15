@@ -1,264 +1,281 @@
-#[macro_export]
-macro_rules! tuple_type {
-    ($type_name:ident, $size:literal, add, BASE) => {
-        impl<T> std::ops::Add for $type_name<T> where T: crate::float::Float {
-            type Output = $type_name<T>;
+use std::marker::PhantomData;
 
-            fn add(self, rhs: Self) -> Self::Output {
-                let mut out: $type_name<T> = Default::default();
-                for i in 0..$size {
-                    out.data[i] = self[i] + rhs[i];
-                }
-                out
+use crate::{float::Float, utils::FuzzyEq};
+
+#[derive(Clone, Copy, Debug)]
+pub struct GenericTuple<T, U, const N: usize>
+where
+    T: Float,
+{
+    data: [T; N],
+    marker: PhantomData<U>,
+}
+
+// Default can be generalized for all tuples.
+impl<T, U, const N: usize> Default for GenericTuple<T, U, N>
+where
+    T: Float,
+{
+    fn default() -> Self {
+        Self {
+            data: [T::default(); N],
+            marker: Default::default(),
+        }
+    }
+}
+
+// From<T; N> can be generalized for all tuples.
+impl<T, U, const N: usize> From<[T; N]> for GenericTuple<T, U, N>
+where
+    T: Float,
+{
+    fn from(data: [T; N]) -> Self {
+        GenericTuple {
+            data,
+            marker: PhantomData,
+        }
+    }
+}
+
+// Indexing can be generalized for all tuples.
+impl<T, U, const N: usize> std::ops::Index<usize> for GenericTuple<T, U, N>
+where
+    T: Float,
+{
+    type Output = T;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.data[index]
+    }
+}
+
+impl<T, U, const N: usize> std::ops::IndexMut<usize> for GenericTuple<T, U, N>
+where
+    T: Float,
+{
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.data[index]
+    }
+}
+
+// FuzzyEq can be generalized for all tuples.
+impl<T, U, const N: usize> FuzzyEq for GenericTuple<T, U, N>
+where
+    T: Float + FuzzyEq,
+    U: Copy,
+{
+    fn fuzzy_eq(&self, other: Self) -> bool {
+        for i in 0..N {
+            if self[i].fuzzy_ne(other[i]) {
+                return false;
             }
         }
-    };
-    ($type_name:ident, $size:literal, elementwise_mul, BASE) => {
-        impl<T> std::ops::Mul for $type_name<T> where T: crate::float::Float {
-            type Output = $type_name<T>;
+        true
+    }
+}
 
-            fn mul(self, rhs: Self) -> Self::Output {
-                let mut out: $type_name<T> = Default::default();
-                for i in 0..$size {
-                    out.data[i] = self[i] * rhs[i];
-                }
-                out
-            }
+// Scalar multiplication can be generalized for all tuples.
+impl<T, U, const N: usize> std::ops::Mul<T> for GenericTuple<T, U, N>
+where
+    T: Float,
+{
+    type Output = Self;
+
+    fn mul(self, rhs: T) -> Self::Output {
+        let mut out = Self::Output::default();
+        for i in 0..N {
+            out[i] = self[i] * rhs;
         }
-    };
-    ($type_name:ident, $size:literal, sub, BASE) => {
-        tuple_type!($type_name, $size, (sub => output = $type_name), BASE);
-    };
-    ($type_name:ident, $size:literal, (sub => output = $sub_out_type:ident), BASE) => {
-        impl<T> std::ops::Sub for $type_name<T> where T: crate::float::Float {
-            type Output = $sub_out_type<T>;
+        out
+    }
+}
 
-            fn sub(self, rhs: Self) -> Self::Output {
-                let mut out: $sub_out_type<T> = Default::default();
-                for i in 0..$size {
-                    out.data[i] = self[i] - rhs[i];
-                }
-                out
-            }
+// Scalar division follows from scalar multiplication.
+impl<T, U, const N: usize> std::ops::Div<T> for GenericTuple<T, U, N>
+where
+    T: Float,
+{
+    type Output = Self;
+
+    fn div(self, rhs: T) -> Self::Output {
+        let mut out = Self::Output::default();
+        for i in 0..N {
+            out[i] = self[i] * T::identity() / rhs;
         }
-    };
-    ($type_name:ident, $size:literal) => {
-        #[derive(Clone, Copy, Debug, Default, PartialEq)]
-        pub struct $type_name<T>
-        where
-            T: crate::float::Float,
-        {
-            pub data: [T; $size],
+        out
+    }
+}
+
+// Negation follows from scalar multiplication.
+impl<T, U, const N: usize> std::ops::Neg for GenericTuple<T, U, N>
+where
+    T: Float,
+{
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        let mut out = Self::Output::default();
+        for i in 0..N {
+            out[i] = self[i] * -T::identity();
         }
+        out
+    }
+}
 
-        impl<T> std::ops::Index<usize> for $type_name<T>
-        where
-            T: crate::float::Float,
-        {
-            type Output = T;
+// Implementation for tuple addition. You get this if your U implements TupleAdd.
+pub trait TupleAdd {}
+impl<T, U, const N: usize> std::ops::Add for GenericTuple<T, U, N>
+where
+    T: Float,
+    U: TupleAdd,
+{
+    type Output = Self;
 
-            fn index(&self, index: usize) -> &Self::Output {
-                match index {
-                    0..=$size => &self.data[index],
-                    _ => panic!("index out of range"),
-                }
-            }
+    fn add(self, rhs: Self) -> Self::Output {
+        let mut out = Self::Output::default();
+        for i in 0..N {
+            out[i] = self[i] + rhs[i];
         }
+        out
+    }
+}
 
-        impl<T> std::ops::IndexMut<usize> for $type_name<T>
-        where
-            T: crate::float::Float,
-        {
-            fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-                &mut self.data[index]
-            }
+// Implementation for tuple subtraction. You get this if your U implements TupleSub.
+// TODO if you want an output type other than Self, I _think_ we'd need GATs which are not stable yet...
+// For now, for Point subtraction, we'll have to implement it explicitly.
+pub trait TupleSub {}
+impl<T, U, const N: usize> std::ops::Sub for GenericTuple<T, U, N>
+where
+    T: Float,
+    U: TupleSub,
+{
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        let mut out = Self::Output::default();
+        for i in 0..N {
+            out[i] = self[i] - rhs[i];
         }
+        out
+    }
+}
 
-        impl<T> std::ops::Mul<T> for $type_name<T>
-        where
-            T: crate::float::Float,
-        {
-            type Output = $type_name<T>;
+// Implementation for elementwise multiplication. You get this if your U implements ElementwiseMul.
+pub trait ElementwiseMul {}
 
-            fn mul(self, rhs: T) -> Self::Output {
-                let mut out: $type_name<T> = Default::default();
-                for i in 0..$size {
-                    out.data[i] = self.data[i] * rhs;
-                }
-                out
-            }
+impl<T, U, const N: usize> std::ops::Mul for GenericTuple<T, U, N>
+where
+    T: Float,
+    U: ElementwiseMul,
+{
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        let mut out = Self::Output::default();
+        for i in 0..N {
+            out[i] = self[i] * rhs[i];
         }
-
-        impl<T> std::ops::Div<T> for $type_name<T>
-        where
-            T: crate::float::Float,
-        {
-            type Output = Self;
-
-            fn div(self, rhs: T) -> Self::Output {
-                self * (T::identity() / rhs)
-            }
-        }
-
-        impl<T> std::ops::Neg for $type_name<T>
-        where
-            T: crate::float::Float,
-        {
-            type Output = Self;
-
-            fn neg(self) -> Self::Output {
-                self * -T::identity()
-            }
-        }
-
-        impl<T> crate::utils::FuzzyEq for $type_name<T>
-        where
-            T: crate::float::Float + crate::utils::FuzzyEq,
-        {
-            fn fuzzy_eq(&self, other: Self) -> bool {
-                for i in 0..$size {
-                    if self[i].fuzzy_ne(other[i]) {
-                        return false;
-                    }
-                }
-                true
-            }
-        }
-    };
-    ($type_name:ident, $size:literal, $($tt:tt),+) => {
-           tuple_type!($type_name, $size);
-           $(
-               tuple_type!($type_name, $size, $tt, BASE);
-           )+
-       };
+        out
+    }
 }
 
 #[cfg(test)]
 mod tests {
 
+    use crate::assert_fuzzy_eq;
+
+    use super::*;
+
+    struct TestTuple {}
+
+    #[test]
+    fn test_mut_indexing() {
+        let mut t = GenericTuple::<f64, TestTuple, 4>::default();
+        t[0] = 1.0;
+        t[1] = 2.0;
+        t[2] = 3.0;
+        t[3] = 4.0;
+
+        assert_fuzzy_eq!([1.0, 2.0, 3.0, 4.0], t.data);
+    }
+
     #[test]
     fn test_indexing() {
-        tuple_type!(Test, 4);
+        let t = GenericTuple::<f64, TestTuple, 3>::from([1.0, 2.0, 3.0]);
+        assert_fuzzy_eq!([1.0, 2.0, 3.0], t.data);
+    }
 
-        let t = Test {
-            data: [1.0, 2.0, 3.0, 4.0],
-        };
+    #[test]
+    fn test_from_array() {
+        let t = GenericTuple::<f64, TestTuple, 3>::from([1.0, 2.0, 3.0]);
+
         assert_eq!(1.0, t[0]);
         assert_eq!(2.0, t[1]);
         assert_eq!(3.0, t[2]);
-        assert_eq!(4.0, t[3]);
     }
 
     #[test]
     #[should_panic(expected = "index out of bounds")]
     fn test_indexing_out_of_bounds() {
-        tuple_type!(Test, 2);
+        let t = GenericTuple::<f64, TestTuple, 4>::default();
+        let _ = t[5];
+    }
 
-        let t = Test { data: [1.0, 2.0] };
-        let _ = t[2];
+    #[test]
+    #[should_panic(expected = "index out of bounds")]
+    fn test_mut_indexing_out_of_bounds() {
+        let mut t = GenericTuple::<f64, TestTuple, 4>::default();
+        t[5] = 6.0;
     }
 
     #[test]
     fn test_scalar_mult() {
-        tuple_type!(Test, 3);
-
-        let t = Test {
-            data: [1.0, 2.0, 3.0],
-        };
-        let exp = Test {
-            data: [3.0, 6.0, 9.0],
-        };
-        assert_eq!(exp, t * 3.0);
+        let mut t = GenericTuple::<f64, TestTuple, 4>::from([1.0, 1.0, 1.0, 1.0]);
+        t = t * 0.5;
+        assert_fuzzy_eq!([0.5, 0.5, 0.5, 0.5], t.data);
     }
 
     #[test]
     fn test_div() {
-        tuple_type!(Test, 3);
-
-        let t = Test {
-            data: [1.0, 2.0, 3.0],
-        };
-        let exp = Test {
-            data: [0.5, 1.0, 1.5],
-        };
-        assert_eq!(exp, t / 2.0);
+        let mut t = GenericTuple::<f64, TestTuple, 4>::from([1.0, 1.0, 1.0, 1.0]);
+        t = t / 0.5;
+        assert_fuzzy_eq!([2.0, 2.0, 2.0, 2.0], t.data);
     }
 
     #[test]
     fn test_neg() {
-        tuple_type!(Test, 3);
-
-        let t = Test {
-            data: [1.0, 2.0, 3.0],
-        };
-        let exp = Test {
-            data: [-1.0, -2.0, -3.0],
-        };
-        assert_eq!(exp, -t);
+        let mut t = GenericTuple::<f64, TestTuple, 4>::from([1.0, 1.0, 1.0, 1.0]);
+        t = -t;
+        assert_fuzzy_eq!([-1.0, -1.0, -1.0, -1.0], t.data);
     }
 
     #[test]
     fn test_add() {
-        tuple_type!(Test, 4, add);
+        impl TupleAdd for TestTuple {}
 
-        let t1 = Test {
-            data: [1.0, 2.0, 3.0, 4.0],
-        };
-        let t2 = Test {
-            data: [2.0, 3.0, 4.0, 5.0],
-        };
-        let exp = Test {
-            data: [3.0, 5.0, 7.0, 9.0],
-        };
-        assert_eq!(exp, t1 + t2)
+        let t1 = GenericTuple::<f64, TestTuple, 4>::from([1.0, 1.0, 1.0, 1.0]);
+        let t2 = GenericTuple::<f64, TestTuple, 4>::from([1.0, 2.0, 3.0, 4.0]);
+        let res = t1 + t2;
+        assert_fuzzy_eq!([2.0, 3.0, 4.0, 5.0], res.data);
     }
 
     #[test]
     fn test_elementwise_mul() {
-        tuple_type!(Test, 4, elementwise_mul);
+        impl ElementwiseMul for TestTuple {}
 
-        let t1 = Test {
-            data: [1.0, 2.0, 3.0, 4.0],
-        };
-        let t2 = Test {
-            data: [2.0, 3.0, 4.0, -5.0],
-        };
-        let exp = Test {
-            data: [2.0, 6.0, 12.0, -20.0],
-        };
-        assert_eq!(exp, t1 * t2)
+        let t1 = GenericTuple::<f64, TestTuple, 4>::from([-4.0, 3.0, -2.0, 1.0]);
+        let t2 = GenericTuple::<f64, TestTuple, 4>::from([1.0, 2.0, 3.0, 4.0]);
+        let res = t1 * t2;
+        assert_fuzzy_eq!([-4.0, 6.0, -6.0, 4.0], res.data);
     }
 
     #[test]
     fn test_sub() {
-        tuple_type!(Test, 3, sub);
+        impl TupleSub for TestTuple {}
 
-        let t1 = Test {
-            data: [1.0, 2.0, 6.0],
-        };
-        let t2 = Test {
-            data: [2.0, 3.0, 4.0],
-        };
-        let exp = Test {
-            data: [-1.0, -1.0, 2.0],
-        };
-        assert_eq!(exp, t1 - t2)
-    }
-
-    #[test]
-    fn test_sub_with_type() {
-        tuple_type!(Test, 3);
-        tuple_type!(TestWithType, 3, (sub => output = Test));
-
-        let t1 = TestWithType {
-            data: [1.0, 2.0, 6.0],
-        };
-        let t2 = TestWithType {
-            data: [2.0, 3.0, 4.0],
-        };
-        let exp = Test {
-            data: [-1.0, -1.0, 2.0],
-        };
-        assert_eq!(exp, t1 - t2)
+        let t1 = GenericTuple::<f64, TestTuple, 4>::from([-4.0, 3.0, -2.0, 1.0]);
+        let t2 = GenericTuple::<f64, TestTuple, 4>::from([1.0, 2.0, 3.0, 4.0]);
+        let res = t1 - t2;
+        assert_fuzzy_eq!([-5.0, 1.0, -5.0, -3.0], res.data);
     }
 }
