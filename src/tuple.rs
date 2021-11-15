@@ -1,6 +1,8 @@
 use std::marker::PhantomData;
 
-use crate::{float::Float, utils::FuzzyEq};
+use num_traits::Float;
+
+use crate::utils::FuzzyEq;
 
 #[derive(Clone, Copy, Debug)]
 pub struct GenericTuple<T, U, const N: usize>
@@ -18,7 +20,7 @@ where
 {
     fn default() -> Self {
         Self {
-            data: [T::default(); N],
+            data: [T::zero(); N],
             marker: Default::default(),
         }
     }
@@ -100,7 +102,7 @@ where
     fn div(self, rhs: T) -> Self::Output {
         let mut out = Self::Output::default();
         for i in 0..N {
-            out[i] = self[i] * T::identity() / rhs;
+            out[i] = self[i] * T::one() / rhs;
         }
         out
     }
@@ -116,7 +118,7 @@ where
     fn neg(self) -> Self::Output {
         let mut out = Self::Output::default();
         for i in 0..N {
-            out[i] = self[i] * -T::identity();
+            out[i] = self[i] * -T::one();
         }
         out
     }

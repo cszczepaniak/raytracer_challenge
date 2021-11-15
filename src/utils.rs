@@ -1,4 +1,4 @@
-use crate::float::Float;
+use num_traits::Float;
 
 pub trait FuzzyEq: Copy {
     fn fuzzy_eq(&self, other: Self) -> bool;

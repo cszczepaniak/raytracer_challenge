@@ -17,9 +17,32 @@ impl Color {
     pub fn to_bytes(&self) -> (u8, u8, u8) {
         let scaled = self.clone() * 255.0;
         (
-            scaled[0].clamp(0.0, 255.0).round() as u8,
-            scaled[1].clamp(0.0, 255.0).round() as u8,
-            scaled[2].clamp(0.0, 255.0).round() as u8,
+            scaled[0].round() as u8,
+            scaled[1].round() as u8,
+            scaled[2].round() as u8,
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn to_bytes_saturates() {
+        let c = Color::new(-1.0, 100000.0, 0.5);
+        let (r, g, b) = c.to_bytes();
+        assert_eq!(0, r);
+        assert_eq!(255, g);
+        assert_eq!(128, b);
+    }
+
+    #[test]
+    fn to_bytes_rounds() {
+        let c = Color::new(0.1, 0.099999999, 0.499999);
+        let (r, g, b) = c.to_bytes();
+        assert_eq!(26, r);
+        assert_eq!(25, g);
+        assert_eq!(127, b);
     }
 }

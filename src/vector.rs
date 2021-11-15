@@ -1,7 +1,6 @@
-use crate::{
-    float::Float,
-    tuple::{GenericTuple, TupleAdd, TupleSub},
-};
+use num_traits::Float;
+
+use crate::tuple::{GenericTuple, TupleAdd, TupleSub};
 
 #[derive(Clone, Copy, Debug)]
 pub struct VectTuple {}
@@ -17,7 +16,7 @@ where
     T: Float,
 {
     pub fn new(x: T, y: T, z: T) -> Self {
-        Vector::from([x, y, z, T::default()])
+        Vector::from([x, y, z, T::zero()])
     }
 
     pub fn dot(&self, other: &Vector<T>) -> T {

@@ -3,7 +3,9 @@ use std::{
     ops::{Index, IndexMut, Mul},
 };
 
-use crate::{float::Float, utils::FuzzyEq};
+use num_traits::Float;
+
+use crate::utils::FuzzyEq;
 
 use super::vector::Vector;
 
@@ -32,7 +34,7 @@ where
     T: Float,
 {
     fn default() -> Self {
-        let def: [[T; N]; N] = [[T::default(); N]; N];
+        let def: [[T; N]; N] = [[T::zero(); N]; N];
         Self::from(def)
     }
 }
@@ -67,9 +69,9 @@ where
         let mut res: Self::Output = Default::default();
         for i in 0..N {
             for j in 0..N {
-                let mut sum = T::default();
+                let mut sum = T::zero();
                 for k in 0..N {
-                    sum += self[i][k] * rhs[k][j];
+                    sum = sum + self[i][k] * rhs[k][j];
                 }
                 res[i][j] = sum;
             }
@@ -118,7 +120,7 @@ where
     pub fn identity() -> Self {
         let mut res = Self::default();
         for i in 0..N {
-            res[i][i] = T::identity();
+            res[i][i] = T::one();
         }
         res
     }
@@ -199,15 +201,15 @@ macro_rules! submatrix_ops {
             }
 
             pub fn determinant(&self) -> T {
-                let mut res = T::default();
+                let mut res = T::zero();
                 for i in 0..$size {
-                    res += self[0][i] * self.cofactor(0, i);
+                    res = res + self[0][i] * self.cofactor(0, i);
                 }
                 res
             }
 
             pub fn is_invertible(&self) -> bool {
-                self.determinant().fuzzy_ne(T::default())
+                self.determinant().fuzzy_ne(T::zero())
             }
 
             pub fn inverse(&self) -> Self {
@@ -244,7 +246,7 @@ where
         for i in 0..4 {
             let row = self[i];
             for j in 0..4 {
-                res[i] += row[j] * (rhs[j]);
+                res[i] = res[i] + row[j] * (rhs[j]);
             }
         }
         res

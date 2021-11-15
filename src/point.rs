@@ -1,5 +1,7 @@
+use num_traits::Float;
+
 use super::vector::Vector;
-use crate::{float::Float, tuple::GenericTuple};
+use crate::tuple::GenericTuple;
 
 pub struct PointStruct {}
 type Point<T> = GenericTuple<T, PointStruct, 4>;
@@ -20,7 +22,7 @@ where
     T: Float,
 {
     fn new(x: T, y: T, z: T) -> Self {
-        Point::from([x, y, z, T::identity()])
+        Point::from([x, y, z, T::one()])
     }
 }
 
