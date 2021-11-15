@@ -26,7 +26,7 @@ where
     }
 }
 
-// From<T; N> can be generalized for all tuples.
+// From<[T; N]> can be generalized for all tuples.
 impl<T, U, const N: usize> From<[T; N]> for Tuple<T, U, N>
 where
     T: Float,
