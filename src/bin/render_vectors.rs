@@ -3,7 +3,7 @@ extern crate raytracer;
 use std::fs;
 
 use raytracer::{
-    canvas::{self, to_ppm::ToPPM, Rectangle},
+    canvas::{self, to_png::ToPNG, to_ppm::ToPPM, Rectangle},
     {color::Color, vector::Vector},
 };
 
@@ -30,6 +30,7 @@ fn main() {
     println!("Saving to file...");
 
     fs::write("output.ppm", canvas.to_ppm()).expect("error writing to file");
+    fs::write("output.png", canvas.to_png()).expect("error writing to file");
 }
 
 struct Environment {

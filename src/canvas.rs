@@ -2,6 +2,7 @@ use num_traits::Float;
 
 use crate::color::Color;
 
+pub mod to_png;
 pub mod to_ppm;
 pub mod to_rgba32;
 
