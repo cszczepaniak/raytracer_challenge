@@ -33,3 +33,24 @@ where
         data
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::color::Color;
+
+    use super::*;
+
+    #[test]
+    fn to_rgba_works_for_canvas() {
+        let mut c = Canvas::new(2, 2);
+        c.write_pixel(0, 0, Color::new(1.0, 0.0, 0.0));
+        c.write_pixel(1, 0, Color::new(0.0, 1.0, 0.0));
+        c.write_pixel(0, 1, Color::new(0.0, 0.0, 1.0));
+        c.write_pixel(1, 1, Color::new(0.5, 1.5, -1.0));
+
+        assert_eq!(
+            vec![255u8, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 128, 255, 0, 255],
+            c.to_rgba()
+        )
+    }
+}
