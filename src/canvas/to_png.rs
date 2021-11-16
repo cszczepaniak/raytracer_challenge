@@ -15,7 +15,7 @@ where
         encoder.set_depth(png::BitDepth::Eight);
         let mut writer = encoder.write_header().unwrap();
         writer.write_image_data(&self.to_rgba32()).unwrap();
-        drop(writer);
+        writer.finish().unwrap();
 
         data
     }
