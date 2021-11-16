@@ -1,4 +1,4 @@
-use super::{to_rgba32::ToRGBA32, Rectangle};
+use super::{to_rgba::ToRGBA, Rectangle};
 
 pub trait ToPPM {
     fn ppm_header(&self) -> Vec<u8>
@@ -13,13 +13,13 @@ pub trait ToPPM {
 
 impl<T> ToPPM for T
 where
-    T: ToRGBA32 + Rectangle,
+    T: ToRGBA + Rectangle,
 {
     fn to_ppm(&self) -> Vec<u8> {
         let mut res = Vec::from(self.ppm_header());
         let mut pixels_written = 0usize;
         let mut row_width = 0usize;
-        for bytes in self.to_rgba32().chunks(4) {
+        for bytes in self.to_rgba().chunks(4) {
             // skip the alpha value
             for b in bytes.iter().take(3) {
                 let comp = format!("{}", b);

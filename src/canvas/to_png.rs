@@ -1,6 +1,6 @@
 use png::EncodingError;
 
-use super::{to_rgba32::ToRGBA32, Rectangle};
+use super::{to_rgba::ToRGBA, Rectangle};
 
 pub trait ToPNG {
     fn to_png(&self) -> Result<Vec<u8>, EncodingError>;
@@ -8,7 +8,7 @@ pub trait ToPNG {
 
 impl<T> ToPNG for T
 where
-    T: ToRGBA32 + Rectangle,
+    T: ToRGBA + Rectangle,
 {
     fn to_png(&self) -> Result<Vec<u8>, EncodingError> {
         let mut data = Vec::new();
@@ -16,7 +16,7 @@ where
         encoder.set_color(png::ColorType::Rgba);
         encoder.set_depth(png::BitDepth::Eight);
         let mut writer = encoder.write_header()?;
-        writer.write_image_data(&self.to_rgba32())?;
+        writer.write_image_data(&self.to_rgba())?;
         writer.finish()?;
 
         Ok(data)

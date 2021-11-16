@@ -4,7 +4,7 @@ use crate::color::Color;
 
 pub mod to_png;
 pub mod to_ppm;
-pub mod to_rgba32;
+pub mod to_rgba;
 
 pub trait Rectangle {
     fn width(&self) -> usize;

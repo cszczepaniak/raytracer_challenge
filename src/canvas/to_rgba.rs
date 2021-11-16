@@ -1,15 +1,15 @@
 use super::Canvas;
 use num_traits::Float;
 
-pub trait ToRGBA32 {
-    fn to_rgba32(&self) -> Vec<u8>;
+pub trait ToRGBA {
+    fn to_rgba(&self) -> Vec<u8>;
 }
 
-impl<T> ToRGBA32 for Canvas<T>
+impl<T> ToRGBA for Canvas<T>
 where
     T: Float,
 {
-    fn to_rgba32(&self) -> Vec<u8> {
+    fn to_rgba(&self) -> Vec<u8> {
         let mut data: Vec<u8> = Vec::new();
         for pixel in self.pixels.iter() {
             let clamped = pixel.clamp(T::zero(), T::one());
