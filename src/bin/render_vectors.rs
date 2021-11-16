@@ -3,7 +3,7 @@ extern crate raytracer;
 use std::fs;
 
 use raytracer::{
-    canvas,
+    canvas::{self, to_ppm::ToPPM, Rectangle},
     {color::Color, vector::Vector},
 };
 
@@ -21,7 +21,7 @@ fn main() {
     while particle.position[1] >= 0.0 {
         println!("{:?}", particle.position);
         if let Some((x, y)) = particle.pos_in_canvas(&canvas) {
-            canvas.write_pixel(x, y, Color::new(0.0, 1.0, 0.0));
+            canvas.write_pixel(x, y, Color::new(1.0, 0.0, 0.0));
         }
         particle.step();
     }
@@ -60,18 +60,21 @@ impl Particle {
         self.position = self.position + self.velocity;
     }
 
-    fn pos_in_canvas(&self, canvas: &canvas::Canvas) -> Option<(usize, usize)> {
+    fn pos_in_canvas<T>(&self, canvas: &T) -> Option<(usize, usize)>
+    where
+        T: Rectangle,
+    {
         if self.position[0] < 0.0 || self.position[1] < 0.0 {
             return None;
         }
-        if self.position[0].round() as usize >= canvas.width
-            || self.position[1].round() as usize >= canvas.height
+        if self.position[0].round() as usize >= canvas.width()
+            || self.position[1].round() as usize >= canvas.height()
         {
             return None;
         }
         Some((
             self.position[0].round() as usize,
-            canvas.height - 1 - self.position[1].round() as usize,
+            canvas.height() - 1 - self.position[1].round() as usize,
         ))
     }
 }

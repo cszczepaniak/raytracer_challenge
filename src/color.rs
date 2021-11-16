@@ -1,3 +1,5 @@
+use num_traits::Float;
+
 use crate::tuple::{ElementwiseMul, Tuple, TupleSub};
 
 #[derive(Clone, Copy, Debug)]
@@ -7,42 +9,21 @@ pub struct ColorTuple {}
 impl TupleSub for ColorTuple {}
 impl ElementwiseMul for ColorTuple {}
 
-pub type Color = Tuple<f64, ColorTuple, 3>;
+pub type Color<T> = Tuple<T, ColorTuple, 3>;
 
-impl Color {
-    pub fn new(r: f64, g: f64, b: f64) -> Self {
+impl<T> Color<T>
+where
+    T: Float,
+{
+    pub fn new(r: T, g: T, b: T) -> Self {
         Color::from([r, g, b])
     }
 
-    pub fn to_bytes(&self) -> (u8, u8, u8) {
-        let scaled = self.clone() * 255.0;
-        (
-            scaled[0].round() as u8,
-            scaled[1].round() as u8,
-            scaled[2].round() as u8,
+    pub fn clamp(&self, lower: T, upper: T) -> Self {
+        Color::new(
+            self[0].min(upper).max(lower),
+            self[1].min(upper).max(lower),
+            self[2].min(upper).max(lower),
         )
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn to_bytes_saturates() {
-        let c = Color::new(-1.0, 100000.0, 0.5);
-        let (r, g, b) = c.to_bytes();
-        assert_eq!(0, r);
-        assert_eq!(255, g);
-        assert_eq!(128, b);
-    }
-
-    #[test]
-    fn to_bytes_rounds() {
-        let c = Color::new(0.1, 0.099999999, 0.499999);
-        let (r, g, b) = c.to_bytes();
-        assert_eq!(26, r);
-        assert_eq!(25, g);
-        assert_eq!(127, b);
     }
 }
