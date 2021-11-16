@@ -27,10 +27,15 @@ fn main() {
     }
     println!("{:?}", particle.position);
 
-    println!("Saving to file...");
-
+    println!("Saving to PPM...");
     fs::write("output.ppm", canvas.to_ppm()).expect("error writing to file");
-    fs::write("output.png", canvas.to_png()).expect("error writing to file");
+
+    println!("Saving to PNG...");
+    fs::write(
+        "output.png",
+        canvas.to_png().expect("converting to png failed"),
+    )
+    .expect("error writing to file");
 }
 
 struct Environment {
