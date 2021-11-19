@@ -244,8 +244,8 @@ where
     #[rustfmt::skip]
     pub fn translate(x: T, y: T, z: T) -> Self {
         Matrix::from([
-            [T::one(),  T::zero(), T::zero(), x       ],
-            [T::zero(), T::one(),  T::zero(), y       ],
+            [T::one() , T::zero(), T::zero(), x       ],
+            [T::zero(), T::one() , T::zero(), y       ],
             [T::zero(), T::zero(), T::one(),  z       ],
             [T::zero(), T::zero(), T::zero(), T::one()],
         ])
