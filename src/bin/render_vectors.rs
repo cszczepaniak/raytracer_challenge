@@ -31,11 +31,8 @@ fn main() {
     fs::write("output.ppm", canvas.to_ppm()).expect("error writing to file");
 
     println!("Saving to PNG...");
-    fs::write(
-        "output.png",
-        canvas.to_png().expect("converting to png failed"),
-    )
-    .expect("error writing to file");
+    let f = fs::File::create("output.png").expect("error creating 'output.png'");
+    canvas.to_png(f).expect("error writing file data");
 }
 
 struct Environment {
