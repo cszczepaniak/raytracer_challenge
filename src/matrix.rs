@@ -244,7 +244,7 @@ where
         for i in 0..4 {
             let row = self[i];
             for j in 0..4 {
-                res[i] = res[i] + row[j] * (rhs[j]);
+                res[i] = res[i] + row[j] * rhs[j];
             }
         }
         res
