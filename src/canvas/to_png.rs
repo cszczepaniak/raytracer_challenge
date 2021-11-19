@@ -1,14 +1,14 @@
 use png::EncodingError;
 
-use super::{to_rgba::ToRGBA, Rectangle};
+use super::{to_rgba::ToRgba, Rectangle};
 
-pub trait ToPNG {
+pub trait ToPng {
     fn to_png(&self) -> Result<Vec<u8>, EncodingError>;
 }
 
-impl<T> ToPNG for T
+impl<T> ToPng for T
 where
-    T: ToRGBA + Rectangle,
+    T: ToRgba + Rectangle,
 {
     fn to_png(&self) -> Result<Vec<u8>, EncodingError> {
         let mut data = Vec::new();

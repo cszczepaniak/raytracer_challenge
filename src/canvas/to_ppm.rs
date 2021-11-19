@@ -1,6 +1,6 @@
-use super::{to_rgba::ToRGBA, Rectangle};
+use super::{to_rgba::ToRgba, Rectangle};
 
-pub trait ToPPM {
+pub trait ToPpm {
     fn ppm_header(&self) -> Vec<u8>
     where
         Self: Rectangle,
@@ -11,9 +11,9 @@ pub trait ToPPM {
     fn to_ppm(&self) -> Vec<u8>;
 }
 
-impl<T> ToPPM for T
+impl<T> ToPpm for T
 where
-    T: ToRGBA + Rectangle,
+    T: ToRgba + Rectangle,
 {
     fn to_ppm(&self) -> Vec<u8> {
         let mut res = Vec::from(self.ppm_header());

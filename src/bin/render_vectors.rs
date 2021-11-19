@@ -3,7 +3,7 @@ extern crate raytracer;
 use std::fs;
 
 use raytracer::{
-    canvas::{self, to_png::ToPNG, to_ppm::ToPPM, Rectangle},
+    canvas::{self, to_png::ToPng, to_ppm::ToPpm, Rectangle},
     {color::Color, vector::Vector},
 };
 

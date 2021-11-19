@@ -1,11 +1,11 @@
 use super::Canvas;
 use num_traits::Float;
 
-pub trait ToRGBA {
+pub trait ToRgba {
     fn to_rgba(&self) -> Vec<u8>;
 }
 
-impl<T> ToRGBA for Canvas<T>
+impl<T> ToRgba for Canvas<T>
 where
     T: Float,
 {
