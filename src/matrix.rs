@@ -231,6 +231,75 @@ macro_rules! submatrix_ops {
 submatrix_ops!(4, 3);
 submatrix_ops!(3, 2);
 
+pub enum Rotation {
+    X,
+    Y,
+    Z,
+}
+
+impl<T> Matrix<T, 4>
+where
+    T: Float,
+{
+    #[rustfmt::skip]
+    pub fn translate(x: T, y: T, z: T) -> Self {
+        Matrix::from([
+            [T::one(),  T::zero(), T::zero(), x       ],
+            [T::zero(), T::one(),  T::zero(), y       ],
+            [T::zero(), T::zero(), T::one(),  z       ],
+            [T::zero(), T::zero(), T::zero(), T::one()],
+        ])
+    }
+
+    #[rustfmt::skip]
+    pub fn scale(x: T, y: T, z: T) -> Self {
+        Matrix::from([
+            [x        , T::zero(), T::zero(), T::zero()],
+            [T::zero(), y        , T::zero(), T::zero()],
+            [T::zero(), T::zero(), z        , T::zero()],
+            [T::zero(), T::zero(), T::zero(), T::one() ],
+        ])
+    }
+
+    pub fn rotate(dir: Rotation, theta: T) -> Self {
+        match dir {
+            Rotation::X => Matrix::rotate_x(theta),
+            Rotation::Y => Matrix::rotate_y(theta),
+            Rotation::Z => Matrix::rotate_z(theta),
+        }
+    }
+
+    #[rustfmt::skip]
+    pub fn rotate_x(theta: T) -> Self {
+        Matrix::from([
+            [T::one() , T::zero()  , T::zero()   , T::zero()],
+            [T::zero(), theta.cos(), -theta.sin(), T::zero()],
+            [T::zero(), theta.sin(), theta.cos() , T::zero()],
+            [T::zero(), T::zero()  , T::zero()   , T::one() ],
+        ])
+    }
+
+    #[rustfmt::skip]
+    pub fn rotate_y(theta: T) -> Self {
+        Matrix::from([
+            [theta.cos() , T::zero(), theta.sin(), T::zero()],
+            [T::zero()   , T::one() , T::zero()  , T::zero()],
+            [-theta.sin(), T::zero(), theta.cos(), T::zero()],
+            [T::zero()   , T::zero(), T::zero()  , T::one() ],
+        ])
+    }
+
+    #[rustfmt::skip]
+    pub fn rotate_z(theta: T) -> Self {
+        Matrix::from([
+            [theta.cos(), -theta.sin(), T::zero(), T::zero()],
+            [theta.sin(), theta.cos() , T::zero(), T::zero()],
+            [T::zero()  , T::zero()   , T::one() , T::zero()],
+            [T::zero()  , T::zero()   , T::zero(), T::one() ],
+        ])
+    }
+}
+
 // We only have 4-element vectors, and points so let's only implement matrix-tuple
 // multiplication between 4x4 matrices and 4 element tuples.
 impl<T, U> Mul<Tuple<T, U, 4>> for Matrix<T, 4>
@@ -253,6 +322,8 @@ where
 
 #[cfg(test)]
 mod tests {
+    use std::f64::consts::{PI, SQRT_2};
+
     use crate::{assert_fuzzy_eq, point::Point, utils::FuzzyEq, vector::Vector};
 
     use super::*;
@@ -591,5 +662,104 @@ mod tests {
 
         let act = m3 * m2.inverse();
         assert_fuzzy_eq!(m1, act);
+    }
+
+    #[test]
+    fn matrix_translate() {
+        let p = Point::new(1.0, 2.0, 3.0);
+        let t = Matrix::translate(1.0, -2.0, 3.0);
+        let res = t * p;
+        assert_fuzzy_eq!(Point::new(2.0, 0.0, 6.0), res);
+
+        // Multiplying by the inverse should bring us back
+        let res = t.inverse() * res;
+        assert_fuzzy_eq!(p, res);
+    }
+
+    #[test]
+    fn matrix_scale_point() {
+        let p = Point::new(1.0, 2.0, 3.0);
+        let t = Matrix::scale(1.0, -2.0, 3.0);
+        let res = t * p;
+        assert_fuzzy_eq!(Point::new(1.0, -4.0, 9.0), res);
+
+        // Multiplying by the inverse should bring us back
+        let res = t.inverse() * res;
+        assert_fuzzy_eq!(p, res);
+    }
+
+    #[test]
+    fn matrix_scale_vector() {
+        let p = Vector::new(1.0, 2.0, 3.0);
+        let t = Matrix::scale(1.0, -2.0, 3.0);
+        let res = t * p;
+        assert_fuzzy_eq!(Vector::new(1.0, -4.0, 9.0), res);
+
+        // Multiplying by the inverse should bring us back
+        let res = t.inverse() * res;
+        assert_fuzzy_eq!(p, res);
+    }
+
+    #[test]
+    fn matrix_rotate_x() {
+        let p = Vector::new(0.0, 1.0, 0.0);
+        let t = Matrix::rotate(Rotation::X, PI / 2.0);
+        let res = t * p;
+        assert_fuzzy_eq!(Vector::new(0.0, 0.0, 1.0), res);
+
+        // Multiplying by the inverse should bring us back
+        let res = t.inverse() * res;
+        assert_fuzzy_eq!(p, res);
+
+        let p = Vector::new(0.0, 1.0, 0.0);
+        let t = Matrix::rotate(Rotation::X, PI / 4.0);
+        let res = t * p;
+        assert_fuzzy_eq!(Vector::new(0.0, SQRT_2 / 2.0, SQRT_2 / 2.0), res);
+
+        // Multiplying by the inverse should bring us back
+        let res = t.inverse() * res;
+        assert_fuzzy_eq!(p, res);
+    }
+
+    #[test]
+    fn matrix_rotate_y() {
+        let p = Vector::new(0.0, 0.0, 1.0);
+        let t = Matrix::rotate(Rotation::Y, PI / 2.0);
+        let res = t * p;
+        assert_fuzzy_eq!(Vector::new(1.0, 0.0, 0.0), res);
+
+        // Multiplying by the inverse should bring us back
+        let res = t.inverse() * res;
+        assert_fuzzy_eq!(p, res);
+
+        let p = Vector::new(0.0, 0.0, 1.0);
+        let t = Matrix::rotate(Rotation::Y, PI / 4.0);
+        let res = t * p;
+        assert_fuzzy_eq!(Vector::new(SQRT_2 / 2.0, 0.0, SQRT_2 / 2.0), res);
+
+        // Multiplying by the inverse should bring us back
+        let res = t.inverse() * res;
+        assert_fuzzy_eq!(p, res);
+    }
+
+    #[test]
+    fn matrix_rotate_z() {
+        let p = Vector::new(0.0, 1.0, 0.0);
+        let t = Matrix::rotate(Rotation::Z, PI / 2.0);
+        let res = t * p;
+        assert_fuzzy_eq!(Vector::new(-1.0, 0.0, 0.0), res);
+
+        // Multiplying by the inverse should bring us back
+        let res = t.inverse() * res;
+        assert_fuzzy_eq!(p, res);
+
+        let p = Vector::new(0.0, 1.0, 0.0);
+        let t = Matrix::rotate(Rotation::Z, PI / 4.0);
+        let res = t * p;
+        assert_fuzzy_eq!(Vector::new(-SQRT_2 / 2.0, SQRT_2 / 2.0, 0.0), res);
+
+        // Multiplying by the inverse should bring us back
+        let res = t.inverse() * res;
+        assert_fuzzy_eq!(p, res);
     }
 }
