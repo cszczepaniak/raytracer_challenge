@@ -5,9 +5,7 @@ use std::{
 
 use num_traits::Float;
 
-use crate::utils::FuzzyEq;
-
-use super::vector::Vector;
+use crate::{tuple::Tuple, utils::FuzzyEq};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Matrix<T, const N: usize>
@@ -233,15 +231,15 @@ macro_rules! submatrix_ops {
 submatrix_ops!(4, 3);
 submatrix_ops!(3, 2);
 
-// We only have 4-element vectors, so let's only implement matrix-vector
-// multiplication for 4x4 matrices.
-impl<T> Mul<Vector<T>> for Matrix<T, 4>
+// We only have 4-element vectors, and points so let's only implement matrix-tuple
+// multiplication between 4x4 matrices and 4 element tuples.
+impl<T, U> Mul<Tuple<T, U, 4>> for Matrix<T, 4>
 where
     T: Float,
 {
-    type Output = Vector<T>;
+    type Output = Tuple<T, U, 4>;
 
-    fn mul(self, rhs: Vector<T>) -> Self::Output {
+    fn mul(self, rhs: Tuple<T, U, 4>) -> Self::Output {
         let mut res = Self::Output::default();
         for i in 0..4 {
             let row = self[i];
@@ -255,7 +253,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{assert_fuzzy_eq, utils::FuzzyEq};
+    use crate::{assert_fuzzy_eq, point::Point, utils::FuzzyEq, vector::Vector};
 
     use super::*;
 
@@ -294,6 +292,21 @@ mod tests {
         ]);
         let v = Vector::new(1.0, 2.0, 3.0);
         let exp = Vector::new(14.0, 22.0, 32.0);
+        let res = m * v;
+
+        assert_fuzzy_eq!(exp, res);
+    }
+
+    #[test]
+    fn matrix_multiplication_with_point() {
+        let m = Matrix::<f64, 4>::from([
+            [1.0, 2.0, 3.0, 4.0],
+            [2.0, 4.0, 4.0, 2.0],
+            [8.0, 6.0, 4.0, 1.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ]);
+        let v = Point::new(1.0, 2.0, 3.0);
+        let exp = Point::new(18.0, 24.0, 33.0);
         let res = m * v;
 
         assert_fuzzy_eq!(exp, res);

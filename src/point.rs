@@ -3,8 +3,9 @@ use num_traits::Float;
 use super::vector::Vector;
 use crate::tuple::Tuple;
 
+#[derive(Clone, Copy, Debug)]
 pub struct PointStruct {}
-type Point<T> = Tuple<T, PointStruct, 4>;
+pub type Point<T> = Tuple<T, PointStruct, 4>;
 
 impl<T> std::ops::Sub for Point<T>
 where
@@ -21,7 +22,7 @@ impl<T> Point<T>
 where
     T: Float,
 {
-    fn new(x: T, y: T, z: T) -> Self {
+    pub fn new(x: T, y: T, z: T) -> Self {
         Point::from([x, y, z, T::one()])
     }
 }
