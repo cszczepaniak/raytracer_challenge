@@ -300,7 +300,7 @@ where
     }
 }
 
-// We only have 4-element vectors, and points so let's only implement matrix-tuple
+// We only have 4-element vectors and points so let's only implement matrix-tuple
 // multiplication between 4x4 matrices and 4 element tuples.
 impl<T, U> Mul<Tuple<T, U, 4>> for Matrix<T, 4>
 where
