@@ -322,7 +322,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::{PI, SQRT_2};
+    use std::f64::consts::{FRAC_1_SQRT_2, FRAC_PI_2, FRAC_PI_4};
 
     use crate::{assert_fuzzy_eq, point::Point, utils::FuzzyEq, vector::Vector};
 
@@ -703,7 +703,7 @@ mod tests {
     #[test]
     fn matrix_rotate_x() {
         let p = Vector::new(0.0, 1.0, 0.0);
-        let t = Matrix::rotate(Rotation::X, PI / 2.0);
+        let t = Matrix::rotate(Rotation::X, FRAC_PI_2);
         let res = t * p;
         assert_fuzzy_eq!(Vector::new(0.0, 0.0, 1.0), res);
 
@@ -712,9 +712,9 @@ mod tests {
         assert_fuzzy_eq!(p, res);
 
         let p = Vector::new(0.0, 1.0, 0.0);
-        let t = Matrix::rotate(Rotation::X, PI / 4.0);
+        let t = Matrix::rotate(Rotation::X, FRAC_PI_4);
         let res = t * p;
-        assert_fuzzy_eq!(Vector::new(0.0, SQRT_2 / 2.0, SQRT_2 / 2.0), res);
+        assert_fuzzy_eq!(Vector::new(0.0, FRAC_1_SQRT_2, FRAC_1_SQRT_2), res);
 
         // Multiplying by the inverse should bring us back
         let res = t.inverse() * res;
@@ -724,7 +724,7 @@ mod tests {
     #[test]
     fn matrix_rotate_y() {
         let p = Vector::new(0.0, 0.0, 1.0);
-        let t = Matrix::rotate(Rotation::Y, PI / 2.0);
+        let t = Matrix::rotate(Rotation::Y, FRAC_PI_2);
         let res = t * p;
         assert_fuzzy_eq!(Vector::new(1.0, 0.0, 0.0), res);
 
@@ -733,9 +733,9 @@ mod tests {
         assert_fuzzy_eq!(p, res);
 
         let p = Vector::new(0.0, 0.0, 1.0);
-        let t = Matrix::rotate(Rotation::Y, PI / 4.0);
+        let t = Matrix::rotate(Rotation::Y, FRAC_PI_4);
         let res = t * p;
-        assert_fuzzy_eq!(Vector::new(SQRT_2 / 2.0, 0.0, SQRT_2 / 2.0), res);
+        assert_fuzzy_eq!(Vector::new(FRAC_1_SQRT_2, 0.0, FRAC_1_SQRT_2), res);
 
         // Multiplying by the inverse should bring us back
         let res = t.inverse() * res;
@@ -745,7 +745,7 @@ mod tests {
     #[test]
     fn matrix_rotate_z() {
         let p = Vector::new(0.0, 1.0, 0.0);
-        let t = Matrix::rotate(Rotation::Z, PI / 2.0);
+        let t = Matrix::rotate(Rotation::Z, FRAC_PI_2);
         let res = t * p;
         assert_fuzzy_eq!(Vector::new(-1.0, 0.0, 0.0), res);
 
@@ -754,9 +754,9 @@ mod tests {
         assert_fuzzy_eq!(p, res);
 
         let p = Vector::new(0.0, 1.0, 0.0);
-        let t = Matrix::rotate(Rotation::Z, PI / 4.0);
+        let t = Matrix::rotate(Rotation::Z, FRAC_PI_4);
         let res = t * p;
-        assert_fuzzy_eq!(Vector::new(-SQRT_2 / 2.0, SQRT_2 / 2.0, 0.0), res);
+        assert_fuzzy_eq!(Vector::new(-FRAC_1_SQRT_2, FRAC_1_SQRT_2, 0.0), res);
 
         // Multiplying by the inverse should bring us back
         let res = t.inverse() * res;
