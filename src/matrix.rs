@@ -795,15 +795,12 @@ mod tests {
     matrix_rotate_z!(Point, matrix_rotate_z_point);
 
     #[test]
-    fn shearing_moves_x_in_proportion_to_y() {
+    fn matrix_shearing_x() {
         let transform = Matrix::shearing(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
         let p = Point::new(2.0, 3.0, 4.0);
 
         assert_fuzzy_eq!(transform * p, Point::new(5.0, 3.0, 4.0));
-    }
 
-    #[test]
-    fn shearing_moves_x_in_proportion_to_z() {
         let transform = Matrix::shearing(0.0, 1.0, 0.0, 0.0, 0.0, 0.0);
         let p = Point::new(2.0, 3.0, 4.0);
 
@@ -811,15 +808,12 @@ mod tests {
     }
 
     #[test]
-    fn shearing_moves_y_in_proportion_to_x() {
+    fn matrix_shearing_y() {
         let transform = Matrix::shearing(0.0, 0.0, 1.0, 0.0, 0.0, 0.0);
         let p = Point::new(2.0, 3.0, 4.0);
 
         assert_fuzzy_eq!(transform * p, Point::new(2.0, 5.0, 4.0));
-    }
 
-    #[test]
-    fn shearing_moves_y_in_proportion_to_z() {
         let transform = Matrix::shearing(0.0, 0.0, 0.0, 1.0, 0.0, 0.0);
         let p = Point::new(2.0, 3.0, 4.0);
 
@@ -827,18 +821,36 @@ mod tests {
     }
 
     #[test]
-    fn shearing_moves_z_in_proportion_to_x() {
+    fn matrix_shearing_z() {
         let transform = Matrix::shearing(0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
         let p = Point::new(2.0, 3.0, 4.0);
 
         assert_fuzzy_eq!(transform * p, Point::new(2.0, 3.0, 6.0));
-    }
 
-    #[test]
-    fn shearing_moves_z_in_proportion_to_y() {
         let transform = Matrix::shearing(0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
         let p = Point::new(2.0, 3.0, 4.0);
 
         assert_fuzzy_eq!(transform * p, Point::new(2.0, 3.0, 7.0));
+    }
+
+    #[test]
+    fn matrix_transforms_in_sequence() {
+        let p = Point::new(1.0, 0.0, 1.0);
+        let a = Matrix::rotate(Rotation::X, FRAC_PI_2);
+        let b = Matrix::scale(5.0, 5.0, 5.0);
+        let c = Matrix::translate(10.0, 5.0, 7.0);
+
+        let p2 = a * p;
+        assert_fuzzy_eq!(Point::new(1.0, -1.0, 0.0), p2);
+
+        let p3 = b * p2;
+        assert_fuzzy_eq!(Point::new(5.0, -5.0, 0.0), p3);
+
+        let p4 = c * p3;
+        assert_fuzzy_eq!(Point::new(15.0, 0.0, 7.0), p4);
+
+        let transform = c * b * a;
+        let p5 = transform * p;
+        assert_fuzzy_eq!(Point::new(15.0, 0.0, 7.0), p5);
     }
 }
