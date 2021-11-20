@@ -298,6 +298,16 @@ where
             [T::zero()  , T::zero()   , T::zero(), T::one() ],
         ])
     }
+
+    #[rustfmt::skip]
+    pub fn shearing(xy: T, xz: T, yx: T, yz: T, zx: T, zy: T) -> Self {
+        Matrix::from([
+            [T::one(),  xy       , xz       , T::zero()],
+            [yx       , T::one() , yz       , T::zero()],
+            [zx       , zy       , T::one() , T::zero()],
+            [T::zero(), T::zero(), T::zero(), T::one() ],
+        ])
+    }
 }
 
 // We only have 4-element vectors and points so let's only implement matrix-tuple
@@ -700,66 +710,135 @@ mod tests {
         assert_fuzzy_eq!(p, res);
     }
 
+    macro_rules! matrix_rotate_x {
+        ($tuple:ident, $name:ident) => {
+            #[test]
+            fn $name() {
+                let p = $tuple::new(0.0, 1.0, 0.0);
+                let t = Matrix::rotate(Rotation::X, FRAC_PI_2);
+                let res = t * p;
+                assert_fuzzy_eq!($tuple::new(0.0, 0.0, 1.0), res);
+
+                // Multiplying by the inverse should bring us back
+                let res = t.inverse() * res;
+                assert_fuzzy_eq!(p, res);
+
+                let p = $tuple::new(0.0, 1.0, 0.0);
+                let t = Matrix::rotate(Rotation::X, FRAC_PI_4);
+                let res = t * p;
+                assert_fuzzy_eq!($tuple::new(0.0, FRAC_1_SQRT_2, FRAC_1_SQRT_2), res);
+
+                // Multiplying by the inverse should bring us back
+                let res = t.inverse() * res;
+                assert_fuzzy_eq!(p, res);
+            }
+        };
+    }
+
+    matrix_rotate_x!(Vector, matrix_rotate_x_vect);
+    matrix_rotate_x!(Point, matrix_rotate_x_point);
+
+    macro_rules! matrix_rotate_y {
+        ($tuple:ident, $name:ident) => {
+            #[test]
+            fn $name() {
+                let p = $tuple::new(0.0, 0.0, 1.0);
+                let t = Matrix::rotate(Rotation::Y, FRAC_PI_2);
+                let res = t * p;
+                assert_fuzzy_eq!($tuple::new(1.0, 0.0, 0.0), res);
+
+                // Multiplying by the inverse should bring us back
+                let res = t.inverse() * res;
+                assert_fuzzy_eq!(p, res);
+
+                let p = $tuple::new(0.0, 0.0, 1.0);
+                let t = Matrix::rotate(Rotation::Y, FRAC_PI_4);
+                let res = t * p;
+                assert_fuzzy_eq!($tuple::new(FRAC_1_SQRT_2, 0.0, FRAC_1_SQRT_2), res);
+
+                // Multiplying by the inverse should bring us back
+                let res = t.inverse() * res;
+                assert_fuzzy_eq!(p, res);
+            }
+        };
+    }
+
+    matrix_rotate_y!(Vector, matrix_rotate_y_vect);
+    matrix_rotate_y!(Point, matrix_rotate_y_point);
+
+    macro_rules! matrix_rotate_z {
+        ($tuple:ident, $name:ident) => {
+            #[test]
+            fn $name() {
+                let p = $tuple::new(0.0, 1.0, 0.0);
+                let t = Matrix::rotate(Rotation::Z, FRAC_PI_2);
+                let res = t * p;
+                assert_fuzzy_eq!($tuple::new(-1.0, 0.0, 0.0), res);
+
+                // Multiplying by the inverse should bring us back
+                let res = t.inverse() * res;
+                assert_fuzzy_eq!(p, res);
+
+                let p = $tuple::new(0.0, 1.0, 0.0);
+                let t = Matrix::rotate(Rotation::Z, FRAC_PI_4);
+                let res = t * p;
+                assert_fuzzy_eq!($tuple::new(-FRAC_1_SQRT_2, FRAC_1_SQRT_2, 0.0), res);
+
+                // Multiplying by the inverse should bring us back
+                let res = t.inverse() * res;
+                assert_fuzzy_eq!(p, res);
+            }
+        };
+    }
+
+    matrix_rotate_z!(Vector, matrix_rotate_z_vect);
+    matrix_rotate_z!(Point, matrix_rotate_z_point);
+
     #[test]
-    fn matrix_rotate_x() {
-        let p = Vector::new(0.0, 1.0, 0.0);
-        let t = Matrix::rotate(Rotation::X, FRAC_PI_2);
-        let res = t * p;
-        assert_fuzzy_eq!(Vector::new(0.0, 0.0, 1.0), res);
+    fn shearing_moves_x_in_proportion_to_y() {
+        let transform = Matrix::shearing(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+        let p = Point::new(2.0, 3.0, 4.0);
 
-        // Multiplying by the inverse should bring us back
-        let res = t.inverse() * res;
-        assert_fuzzy_eq!(p, res);
-
-        let p = Vector::new(0.0, 1.0, 0.0);
-        let t = Matrix::rotate(Rotation::X, FRAC_PI_4);
-        let res = t * p;
-        assert_fuzzy_eq!(Vector::new(0.0, FRAC_1_SQRT_2, FRAC_1_SQRT_2), res);
-
-        // Multiplying by the inverse should bring us back
-        let res = t.inverse() * res;
-        assert_fuzzy_eq!(p, res);
+        assert_fuzzy_eq!(transform * p, Point::new(5.0, 3.0, 4.0));
     }
 
     #[test]
-    fn matrix_rotate_y() {
-        let p = Vector::new(0.0, 0.0, 1.0);
-        let t = Matrix::rotate(Rotation::Y, FRAC_PI_2);
-        let res = t * p;
-        assert_fuzzy_eq!(Vector::new(1.0, 0.0, 0.0), res);
+    fn shearing_moves_x_in_proportion_to_z() {
+        let transform = Matrix::shearing(0.0, 1.0, 0.0, 0.0, 0.0, 0.0);
+        let p = Point::new(2.0, 3.0, 4.0);
 
-        // Multiplying by the inverse should bring us back
-        let res = t.inverse() * res;
-        assert_fuzzy_eq!(p, res);
-
-        let p = Vector::new(0.0, 0.0, 1.0);
-        let t = Matrix::rotate(Rotation::Y, FRAC_PI_4);
-        let res = t * p;
-        assert_fuzzy_eq!(Vector::new(FRAC_1_SQRT_2, 0.0, FRAC_1_SQRT_2), res);
-
-        // Multiplying by the inverse should bring us back
-        let res = t.inverse() * res;
-        assert_fuzzy_eq!(p, res);
+        assert_fuzzy_eq!(transform * p, Point::new(6.0, 3.0, 4.0));
     }
 
     #[test]
-    fn matrix_rotate_z() {
-        let p = Vector::new(0.0, 1.0, 0.0);
-        let t = Matrix::rotate(Rotation::Z, FRAC_PI_2);
-        let res = t * p;
-        assert_fuzzy_eq!(Vector::new(-1.0, 0.0, 0.0), res);
+    fn shearing_moves_y_in_proportion_to_x() {
+        let transform = Matrix::shearing(0.0, 0.0, 1.0, 0.0, 0.0, 0.0);
+        let p = Point::new(2.0, 3.0, 4.0);
 
-        // Multiplying by the inverse should bring us back
-        let res = t.inverse() * res;
-        assert_fuzzy_eq!(p, res);
+        assert_fuzzy_eq!(transform * p, Point::new(2.0, 5.0, 4.0));
+    }
 
-        let p = Vector::new(0.0, 1.0, 0.0);
-        let t = Matrix::rotate(Rotation::Z, FRAC_PI_4);
-        let res = t * p;
-        assert_fuzzy_eq!(Vector::new(-FRAC_1_SQRT_2, FRAC_1_SQRT_2, 0.0), res);
+    #[test]
+    fn shearing_moves_y_in_proportion_to_z() {
+        let transform = Matrix::shearing(0.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+        let p = Point::new(2.0, 3.0, 4.0);
 
-        // Multiplying by the inverse should bring us back
-        let res = t.inverse() * res;
-        assert_fuzzy_eq!(p, res);
+        assert_fuzzy_eq!(transform * p, Point::new(2.0, 7.0, 4.0));
+    }
+
+    #[test]
+    fn shearing_moves_z_in_proportion_to_x() {
+        let transform = Matrix::shearing(0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+        let p = Point::new(2.0, 3.0, 4.0);
+
+        assert_fuzzy_eq!(transform * p, Point::new(2.0, 3.0, 6.0));
+    }
+
+    #[test]
+    fn shearing_moves_z_in_proportion_to_y() {
+        let transform = Matrix::shearing(0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+        let p = Point::new(2.0, 3.0, 4.0);
+
+        assert_fuzzy_eq!(transform * p, Point::new(2.0, 3.0, 7.0));
     }
 }
