@@ -237,6 +237,18 @@ pub enum Rotation {
     Z,
 }
 
+pub enum Shear<T>
+where
+    T: Float,
+{
+    XY(T),
+    XZ(T),
+    YX(T),
+    YZ(T),
+    ZX(T),
+    ZY(T),
+}
+
 impl<T> Matrix<T, 4>
 where
     T: Float,
@@ -299,14 +311,19 @@ where
         ])
     }
 
-    #[rustfmt::skip]
-    pub fn shearing(xy: T, xz: T, yx: T, yz: T, zx: T, zy: T) -> Self {
-        Matrix::from([
-            [T::one(),  xy       , xz       , T::zero()],
-            [yx       , T::one() , yz       , T::zero()],
-            [zx       , zy       , T::one() , T::zero()],
-            [T::zero(), T::zero(), T::zero(), T::one() ],
-        ])
+    pub fn shear(shears: &[Shear<T>]) -> Self {
+        let mut res = Self::identity();
+        for sh in shears {
+            match sh {
+                &Shear::XY(v) => res[0][1] = v,
+                &Shear::XZ(v) => res[0][2] = v,
+                &Shear::YX(v) => res[1][0] = v,
+                &Shear::YZ(v) => res[1][2] = v,
+                &Shear::ZX(v) => res[2][0] = v,
+                &Shear::ZY(v) => res[2][1] = v,
+            };
+        }
+        res
     }
 }
 
@@ -796,12 +813,12 @@ mod tests {
 
     #[test]
     fn matrix_shearing_x() {
-        let transform = Matrix::shearing(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+        let transform = Matrix::shear(&[Shear::XY(1.0)]);
         let p = Point::new(2.0, 3.0, 4.0);
 
         assert_fuzzy_eq!(transform * p, Point::new(5.0, 3.0, 4.0));
 
-        let transform = Matrix::shearing(0.0, 1.0, 0.0, 0.0, 0.0, 0.0);
+        let transform = Matrix::shear(&[Shear::XZ(1.0)]);
         let p = Point::new(2.0, 3.0, 4.0);
 
         assert_fuzzy_eq!(transform * p, Point::new(6.0, 3.0, 4.0));
@@ -809,12 +826,12 @@ mod tests {
 
     #[test]
     fn matrix_shearing_y() {
-        let transform = Matrix::shearing(0.0, 0.0, 1.0, 0.0, 0.0, 0.0);
+        let transform = Matrix::shear(&[Shear::YX(1.0)]);
         let p = Point::new(2.0, 3.0, 4.0);
 
         assert_fuzzy_eq!(transform * p, Point::new(2.0, 5.0, 4.0));
 
-        let transform = Matrix::shearing(0.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+        let transform = Matrix::shear(&[Shear::YZ(1.0)]);
         let p = Point::new(2.0, 3.0, 4.0);
 
         assert_fuzzy_eq!(transform * p, Point::new(2.0, 7.0, 4.0));
@@ -822,12 +839,12 @@ mod tests {
 
     #[test]
     fn matrix_shearing_z() {
-        let transform = Matrix::shearing(0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+        let transform = Matrix::shear(&[Shear::ZX(1.0)]);
         let p = Point::new(2.0, 3.0, 4.0);
 
         assert_fuzzy_eq!(transform * p, Point::new(2.0, 3.0, 6.0));
 
-        let transform = Matrix::shearing(0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+        let transform = Matrix::shear(&[Shear::ZY(1.0)]);
         let p = Point::new(2.0, 3.0, 4.0);
 
         assert_fuzzy_eq!(transform * p, Point::new(2.0, 3.0, 7.0));
