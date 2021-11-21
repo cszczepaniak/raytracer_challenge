@@ -43,8 +43,6 @@ fn main() {
     let color = Color::new(1.0, 0.0, 0.0);
 
     for i in 0..12 {
-        let rot = Matrix::rotate(raytracer::matrix::Rotation::Z, (2.0 * PI) / 12.0);
-        pt = rot * pt;
         let px = Pixel::from_point_for_canvas(pt, &origin, &canvas);
         let x;
         let y;
@@ -63,7 +61,7 @@ fn main() {
         // Make lines
         let v: Vector<_> = pt.into();
         let len;
-        match (i + 1) % 3 {
+        match i % 3 {
             0 => len = 10,
             _ => len = 5,
         }
@@ -74,6 +72,8 @@ fn main() {
                 canvas.write_pixel(x, y, color);
             }
         }
+        let rot = Matrix::rotate(raytracer::matrix::Rotation::Z, (2.0 * PI) / 12.0);
+        pt = rot * pt;
     }
 
     println!("Saving to PPM...");
