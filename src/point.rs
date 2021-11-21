@@ -18,6 +18,15 @@ where
     }
 }
 
+impl<T> Into<Vector<T>> for Point<T>
+where
+    T: Float,
+{
+    fn into(self) -> Vector<T> {
+        Vector::new(self[0], self[1], self[2])
+    }
+}
+
 impl<T> Point<T>
 where
     T: Float,

@@ -1,6 +1,9 @@
 use num_traits::Float;
 
-use crate::tuple::{Tuple, TupleAdd, TupleSub};
+use crate::{
+    point::Point,
+    tuple::{Tuple, TupleAdd, TupleSub},
+};
 
 #[derive(Clone, Copy, Debug)]
 pub struct VectTuple {}
@@ -38,6 +41,15 @@ where
     pub fn normalize(&self) -> Vector<T> {
         let mag = self.magnitude();
         Vector::new(self[0], self[1], self[2]) / mag
+    }
+}
+
+impl<T> Into<Point<T>> for Vector<T>
+where
+    T: Float,
+{
+    fn into(self) -> Point<T> {
+        Point::new(self[0], self[1], self[2])
     }
 }
 
