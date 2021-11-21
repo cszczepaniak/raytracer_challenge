@@ -3,7 +3,7 @@ use std::{f64::consts::PI, fs};
 use raytracer::{
     canvas::{to_png::ToPng, to_ppm::ToPpm, Canvas},
     color::Color,
-    matrix::Matrix,
+    matrix::{Matrix, Rotation},
     point::Point,
     vector::Vector,
 };
@@ -16,22 +16,22 @@ enum Pixel {
 
 impl Pixel {
     pub fn from_point_for_canvas(
-        mut point: Point<f64>,
+        point: &Point<f64>,
         origin: &Point<f64>,
         canvas: &Canvas<f64>,
     ) -> Pixel {
-        point[0] += origin[0];
-        point[1] += origin[1];
-        if point[0] < 0.0 || point[1] < 0.0 {
+        let x = point[0] + origin[0];
+        let y = point[1] + origin[1];
+        if x < 0.0 || y < 0.0 {
             return Pixel::OutOfBounds;
         }
-        if point[0].round() as usize >= canvas.width || point[1].round() as usize >= canvas.height {
+        if x.round() as usize >= canvas.width || y.round() as usize >= canvas.height {
             return Pixel::OutOfBounds;
         }
 
         Pixel::Coordinate {
-            x: point[0].round() as usize,
-            y: canvas.height - 1 - point[1].round() as usize,
+            x: x.round() as usize,
+            y: canvas.height - 1 - y.round() as usize,
         }
     }
 }
@@ -43,12 +43,9 @@ fn main() {
     let color = Color::new(1.0, 0.0, 0.0);
 
     for i in 0..12 {
-        let rot = Matrix::rotate(
-            raytracer::matrix::Rotation::Z,
-            (2.0 * PI * (i as f64)) / 12.0,
-        );
-        let rotated = rot * pt;
-        let px = Pixel::from_point_for_canvas(rot * pt, &origin, &canvas);
+        let transform = Matrix::rotate(Rotation::Z, (2.0 * PI * (i as f64)) / 12.0);
+        let rotated = transform * pt;
+        let px = Pixel::from_point_for_canvas(&rotated, &origin, &canvas);
         let x;
         let y;
         match px {
@@ -65,14 +62,13 @@ fn main() {
 
         // Make lines
         let v: Vector<_> = rotated.into();
-        let len;
-        match i % 3 {
-            0 => len = 10,
-            _ => len = 5,
-        }
+        let len = match i % 3 {
+            0 => 10,
+            _ => 5,
+        };
         for i in 1..=len {
             let scaled = v.normalize() * (v.magnitude() - i as f64);
-            let l_px = Pixel::from_point_for_canvas(scaled.into(), &origin, &canvas);
+            let l_px = Pixel::from_point_for_canvas(&scaled.into(), &origin, &canvas);
             if let Pixel::Coordinate { x, y } = l_px {
                 canvas.write_pixel(x, y, color);
             }
