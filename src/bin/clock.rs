@@ -61,18 +61,18 @@ fn main() {
         canvas.write_pixel(x, y, color);
 
         // Make lines
+        let v: Vector<_> = pt.into();
+        let len;
         match (i + 1) % 3 {
-            0 => {
-                let v: Vector<_> = pt.into();
-                for i in 1..=10 {
-                    let scaled = v.normalize() * (v.magnitude() - i as f64);
-                    let l_px = Pixel::from_point_for_canvas(scaled.into(), &origin, &canvas);
-                    if let Pixel::Coordinate { x, y } = l_px {
-                        canvas.write_pixel(x, y, color);
-                    }
-                }
+            0 => len = 10,
+            _ => len = 5,
+        }
+        for i in 1..=len {
+            let scaled = v.normalize() * (v.magnitude() - i as f64);
+            let l_px = Pixel::from_point_for_canvas(scaled.into(), &origin, &canvas);
+            if let Pixel::Coordinate { x, y } = l_px {
+                canvas.write_pixel(x, y, color);
             }
-            _ => {}
         }
     }
 
