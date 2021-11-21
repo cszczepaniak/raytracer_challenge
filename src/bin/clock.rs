@@ -5,7 +5,6 @@ use raytracer::{
     color::Color,
     matrix::{Matrix, Rotation},
     point::Point,
-    vector::Vector,
 };
 
 #[derive(Debug)]
@@ -15,13 +14,9 @@ enum Pixel {
 }
 
 impl Pixel {
-    pub fn from_point_for_canvas(
-        point: &Point<f64>,
-        origin: &Point<f64>,
-        canvas: &Canvas<f64>,
-    ) -> Pixel {
-        let x = point[0] + origin[0];
-        let y = point[1] + origin[1];
+    pub fn from_point_for_canvas(point: &Point<f64>, canvas: &Canvas<f64>) -> Pixel {
+        let x = point[0];
+        let y = point[1];
         if x < 0.0 || y < 0.0 {
             return Pixel::OutOfBounds;
         }
@@ -37,15 +32,20 @@ impl Pixel {
 }
 
 fn main() {
-    let mut canvas = Canvas::new(400, 400);
-    let pt = Point::new(100.0, 0.0, 0.0);
-    let origin = Point::new(200.0, 200.0, 0.0);
+    const WIDTH: usize = 400;
+    const HEIGHT: usize = 400;
+    const R: usize = 150;
+
+    let mut canvas = Canvas::new(WIDTH, HEIGHT);
+    let pt = Point::new(R as f64, 0.0, 0.0);
+    let origin = Point::new((WIDTH / 2) as f64, (HEIGHT / 2) as f64, 0.0);
     let color = Color::new(1.0, 0.0, 0.0);
+    let translation = Matrix::translate(origin[0], origin[1], 0.0);
 
     for i in 0..12 {
-        let transform = Matrix::rotate(Rotation::Z, (2.0 * PI * (i as f64)) / 12.0);
-        let rotated = transform * pt;
-        let px = Pixel::from_point_for_canvas(&rotated, &origin, &canvas);
+        let rotation = Matrix::rotate(Rotation::Z, (2.0 * PI * (i as f64)) / 12.0);
+        let rotated = translation * rotation * pt;
+        let px = Pixel::from_point_for_canvas(&rotated, &canvas);
         let x;
         let y;
         match px {
@@ -61,14 +61,17 @@ fn main() {
         canvas.write_pixel(x, y, color);
 
         // Make lines
-        let v: Vector<_> = rotated.into();
         let len = match i % 3 {
             0 => 10,
             _ => 5,
         };
         for i in 1..=len {
-            let scaled = v.normalize() * (v.magnitude() - i as f64);
-            let l_px = Pixel::from_point_for_canvas(&scaled.into(), &origin, &canvas);
+            // ray is a vector representing the segment from the origin to the point on the clock
+            let ray = rotated - origin;
+            // scaled is the ray, but scaled down towards the origin by 1 pixel
+            let scaled: Point<_> = (ray.normalize() * (ray.magnitude() - i as f64)).into();
+
+            let l_px = Pixel::from_point_for_canvas(&(translation * scaled), &canvas);
             if let Pixel::Coordinate { x, y } = l_px {
                 canvas.write_pixel(x, y, color);
             }
