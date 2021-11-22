@@ -5,12 +5,6 @@ pub trait FuzzyEq: Copy {
     }
 }
 
-impl FuzzyEq for f32 {
-    fn fuzzy_eq(&self, other: Self) -> bool {
-        (self - other).abs() < 0.00001
-    }
-}
-
 impl FuzzyEq for f64 {
     fn fuzzy_eq(&self, other: Self) -> bool {
         (self - other).abs() < 0.00001
