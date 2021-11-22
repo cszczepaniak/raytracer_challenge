@@ -24,10 +24,8 @@ impl Default for Sphere {
 }
 
 impl Sphere {
-    fn with_transform(&self, t: Matrix<4>) -> Self {
-        let mut res = self.clone();
-        res.transform = t;
-        res
+    fn with_transform(transform: Matrix<4>) -> Self {
+        Self { transform }
     }
 
     pub fn intersect(&self, r: Ray) -> Vec<Intersection> {
@@ -131,7 +129,7 @@ mod tests {
     #[test]
     fn intersecting_a_scaled_sphere_with_a_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
-        let s = Sphere::default().with_transform(Matrix::scale(2.0, 2.0, 2.0));
+        let s = Sphere::with_transform(Matrix::scale(2.0, 2.0, 2.0));
 
         let xs = s.intersect(r);
 
@@ -143,7 +141,7 @@ mod tests {
     #[test]
     fn intersecting_a_translated_sphere_with_a_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
-        let s = Sphere::default().with_transform(Matrix::translate(5.0, 0.0, 0.0));
+        let s = Sphere::with_transform(Matrix::translate(5.0, 0.0, 0.0));
 
         let xs = s.intersect(r);
 
