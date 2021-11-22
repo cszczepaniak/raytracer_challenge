@@ -1,4 +1,7 @@
-use std::marker::PhantomData;
+use std::{
+    marker::PhantomData,
+    ops::{self, Add, Div, Index, IndexMut, Mul, Neg},
+};
 
 use crate::utils::FuzzyEq;
 
@@ -29,7 +32,7 @@ impl<T, const N: usize> From<[f64; N]> for Tuple<T, N> {
 }
 
 // Indexing can be generalized for all tuples.
-impl<T, const N: usize> std::ops::Index<usize> for Tuple<T, N> {
+impl<T, const N: usize> Index<usize> for Tuple<T, N> {
     type Output = f64;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -37,7 +40,7 @@ impl<T, const N: usize> std::ops::Index<usize> for Tuple<T, N> {
     }
 }
 
-impl<T, const N: usize> std::ops::IndexMut<usize> for Tuple<T, N> {
+impl<T, const N: usize> IndexMut<usize> for Tuple<T, N> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.data[index]
     }
@@ -59,7 +62,7 @@ where
 }
 
 // Scalar multiplication can be generalized for all tuples.
-impl<T, const N: usize> std::ops::Mul<f64> for Tuple<T, N> {
+impl<T, const N: usize> Mul<f64> for Tuple<T, N> {
     type Output = Self;
 
     fn mul(self, rhs: f64) -> Self::Output {
@@ -72,7 +75,7 @@ impl<T, const N: usize> std::ops::Mul<f64> for Tuple<T, N> {
 }
 
 // Scalar division follows from scalar multiplication.
-impl<T, const N: usize> std::ops::Div<f64> for Tuple<T, N> {
+impl<T, const N: usize> Div<f64> for Tuple<T, N> {
     type Output = Self;
 
     fn div(self, rhs: f64) -> Self::Output {
@@ -85,7 +88,7 @@ impl<T, const N: usize> std::ops::Div<f64> for Tuple<T, N> {
 }
 
 // Negation follows from scalar multiplication.
-impl<T, const N: usize> std::ops::Neg for Tuple<T, N> {
+impl<T, const N: usize> Neg for Tuple<T, N> {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
@@ -99,7 +102,7 @@ impl<T, const N: usize> std::ops::Neg for Tuple<T, N> {
 
 // Implementation for tuple addition. You get this if your U implements TupleAdd.
 pub trait TupleAdd {}
-impl<T, const N: usize> std::ops::Add for Tuple<T, N>
+impl<T, const N: usize> Add for Tuple<T, N>
 where
     T: TupleAdd,
 {
@@ -118,7 +121,7 @@ where
 // TODO if you want an output type other than Self, I _think_ we'd need GATs which are not stable yet...
 // For now, for Point subtraction, we'll have to implement it explicitly.
 pub trait TupleSub {}
-impl<T, const N: usize> std::ops::Sub for Tuple<T, N>
+impl<T, const N: usize> ops::Sub for Tuple<T, N>
 where
     T: TupleSub,
 {
@@ -136,7 +139,7 @@ where
 // Implementation for elementwise multiplication. You get this if your U implements ElementwiseMul.
 pub trait ElementwiseMul {}
 
-impl<T, const N: usize> std::ops::Mul for Tuple<T, N>
+impl<T, const N: usize> ops::Mul for Tuple<T, N>
 where
     T: ElementwiseMul,
 {

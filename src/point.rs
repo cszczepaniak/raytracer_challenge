@@ -1,3 +1,5 @@
+use std::ops::{Add, Sub};
+
 use super::vector::Vector;
 use crate::tuple::Tuple;
 
@@ -5,11 +7,19 @@ use crate::tuple::Tuple;
 pub struct PointStruct {}
 pub type Point = Tuple<PointStruct, 4>;
 
-impl std::ops::Sub for Point {
+impl Sub for Point {
     type Output = Vector;
 
     fn sub(self, rhs: Self) -> Self::Output {
         Vector::new(self[0] - rhs[0], self[1] - rhs[1], self[2] - rhs[2])
+    }
+}
+
+impl Add<Vector> for Point {
+    type Output = Self;
+
+    fn add(self, rhs: Vector) -> Self::Output {
+        Point::new(self[0] + rhs[0], self[1] + rhs[1], self[2] + rhs[2])
     }
 }
 
