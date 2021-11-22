@@ -1,5 +1,3 @@
-use num_traits::Float;
-
 pub trait FuzzyEq: Copy {
     fn fuzzy_eq(&self, other: Self) -> bool;
     fn fuzzy_ne(&self, other: Self) -> bool {
@@ -21,7 +19,7 @@ impl FuzzyEq for f64 {
 
 impl<T, const N: usize> FuzzyEq for [T; N]
 where
-    T: Float + FuzzyEq,
+    T: FuzzyEq,
 {
     fn fuzzy_eq(&self, other: Self) -> bool {
         for i in 0..N {

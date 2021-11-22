@@ -1,30 +1,17 @@
 use super::Canvas;
-use num_traits::Float;
 
 pub trait ToRgba {
     fn to_rgba(&self) -> Vec<u8>;
 }
 
-impl<T> ToRgba for Canvas<T>
-where
-    T: Float,
-{
+impl ToRgba for Canvas {
     fn to_rgba(&self) -> Vec<u8> {
         let mut data: Vec<u8> = Vec::new();
         for pixel in self.pixels.iter() {
-            let clamped = pixel.clamp(T::zero(), T::one());
-            let r = (clamped[0] * T::from(255.0).unwrap())
-                .round()
-                .to_u8()
-                .unwrap();
-            let g = (clamped[1] * T::from(255.0).unwrap())
-                .round()
-                .to_u8()
-                .unwrap();
-            let b = (clamped[2] * T::from(255.0).unwrap())
-                .round()
-                .to_u8()
-                .unwrap();
+            let clamped = pixel.clamp(0.0, 1.0);
+            let r = (clamped[0] * 255.0).round() as u8;
+            let g = (clamped[1] * 255.0).round() as u8;
+            let b = (clamped[2] * 255.0).round() as u8;
             data.push(r);
             data.push(g);
             data.push(b);

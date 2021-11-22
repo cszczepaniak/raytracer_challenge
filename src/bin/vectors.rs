@@ -1,6 +1,5 @@
 extern crate raytracer;
 
-use num_traits::Float;
 use raytracer::vector::Vector;
 
 fn main() {
@@ -17,31 +16,22 @@ fn main() {
     println!("{:?}", particle);
 }
 
-struct Environment<T>
-where
-    T: Float,
-{
+struct Environment {
     // the acceleration of gravity
-    gravity: Vector<T>,
+    gravity: Vector,
     // the acceleration of the wind
-    wind: Vector<T>,
+    wind: Vector,
 }
 
 #[derive(Debug)]
-struct Particle<T>
-where
-    T: Float,
-{
-    position: Vector<T>,
-    velocity: Vector<T>,
-    acceleration: Vector<T>,
+struct Particle {
+    position: Vector,
+    velocity: Vector,
+    acceleration: Vector,
 }
 
-impl<T> Particle<T>
-where
-    T: Float,
-{
-    fn with_env(env: Environment<T>, initial_pos: Vector<T>, initial_vel: Vector<T>) -> Self {
+impl Particle {
+    fn with_env(env: Environment, initial_pos: Vector, initial_vel: Vector) -> Self {
         Self {
             position: initial_pos,
             velocity: initial_vel,

@@ -1,5 +1,3 @@
-use num_traits::Float;
-
 use crate::tuple::{ElementwiseMul, Tuple, TupleSub};
 
 #[derive(Clone, Copy, Debug)]
@@ -9,21 +7,18 @@ pub struct ColorTuple {}
 impl TupleSub for ColorTuple {}
 impl ElementwiseMul for ColorTuple {}
 
-pub type Color<T> = Tuple<T, ColorTuple, 3>;
+pub type Color = Tuple<ColorTuple, 3>;
 
-impl<T> Color<T>
-where
-    T: Float,
-{
-    pub fn new(r: T, g: T, b: T) -> Self {
+impl Color {
+    pub fn new(r: f64, g: f64, b: f64) -> Self {
         Color::from([r, g, b])
     }
 
-    pub fn clamp(&self, lower: T, upper: T) -> Self {
+    pub fn clamp(&self, lower: f64, upper: f64) -> Self {
         Color::new(
-            self[0].min(upper).max(lower),
-            self[1].min(upper).max(lower),
-            self[2].min(upper).max(lower),
+            self[0].clamp(lower, upper),
+            self[1].clamp(lower, upper),
+            self[2].clamp(lower, upper),
         )
     }
 }

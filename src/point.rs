@@ -1,38 +1,27 @@
-use num_traits::Float;
-
 use super::vector::Vector;
 use crate::tuple::Tuple;
 
 #[derive(Clone, Copy, Debug)]
 pub struct PointStruct {}
-pub type Point<T> = Tuple<T, PointStruct, 4>;
+pub type Point = Tuple<PointStruct, 4>;
 
-impl<T> std::ops::Sub for Point<T>
-where
-    T: Float,
-{
-    type Output = Vector<T>;
+impl std::ops::Sub for Point {
+    type Output = Vector;
 
     fn sub(self, rhs: Self) -> Self::Output {
         Vector::new(self[0] - rhs[0], self[1] - rhs[1], self[2] - rhs[2])
     }
 }
 
-impl<T> Into<Vector<T>> for Point<T>
-where
-    T: Float,
-{
-    fn into(self) -> Vector<T> {
+impl Into<Vector> for Point {
+    fn into(self) -> Vector {
         Vector::new(self[0], self[1], self[2])
     }
 }
 
-impl<T> Point<T>
-where
-    T: Float,
-{
-    pub fn new(x: T, y: T, z: T) -> Self {
-        Point::from([x, y, z, T::one()])
+impl Point {
+    pub fn new(x: f64, y: f64, z: f64) -> Self {
+        Point::from([x, y, z, 1.0])
     }
 }
 

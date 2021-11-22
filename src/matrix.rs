@@ -3,71 +3,50 @@ use std::{
     ops::{Index, IndexMut, Mul},
 };
 
-use num_traits::Float;
-
 use crate::{tuple::Tuple, utils::FuzzyEq};
 
 #[derive(Debug, Copy, Clone)]
-pub struct Matrix<T, const N: usize>
-where
-    T: Float,
-{
-    data: [[T; N]; N],
+pub struct Matrix<const N: usize> {
+    data: [[f64; N]; N],
 }
 
 // We can generalize the following trait implementations for _all_ matrices,
 // regardless of type and size.
 
-impl<T, const N: usize> From<[[T; N]; N]> for Matrix<T, N>
-where
-    T: Float,
-{
-    fn from(data: [[T; N]; N]) -> Self {
+impl<const N: usize> From<[[f64; N]; N]> for Matrix<N> {
+    fn from(data: [[f64; N]; N]) -> Self {
         Matrix { data }
     }
 }
 
-impl<T, const N: usize> Default for Matrix<T, N>
-where
-    T: Float,
-{
+impl<const N: usize> Default for Matrix<N> {
     fn default() -> Self {
-        let def: [[T; N]; N] = [[T::zero(); N]; N];
-        Self::from(def)
+        Self::from([[0.0; N]; N])
     }
 }
 
-impl<T, const N: usize> Index<usize> for Matrix<T, N>
-where
-    T: Float,
-{
-    type Output = [T; N];
+impl<const N: usize> Index<usize> for Matrix<N> {
+    type Output = [f64; N];
 
     fn index(&self, index: usize) -> &Self::Output {
         &self.data[index]
     }
 }
 
-impl<T, const N: usize> IndexMut<usize> for Matrix<T, N>
-where
-    T: Float,
-{
+impl<const N: usize> IndexMut<usize> for Matrix<N> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.data[index]
     }
 }
 
-impl<T, const N: usize> Mul for Matrix<T, N>
-where
-    T: Float,
-{
+impl<const N: usize> Mul for Matrix<N> {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
         let mut res: Self::Output = Default::default();
         for i in 0..N {
             for j in 0..N {
-                let mut sum = T::zero();
+                let mut sum = 0.0;
                 for k in 0..N {
                     sum = sum + self[i][k] * rhs[k][j];
                 }
@@ -78,13 +57,10 @@ where
     }
 }
 
-impl<T, const N: usize> Mul<T> for Matrix<T, N>
-where
-    T: Float,
-{
+impl<const N: usize> Mul<f64> for Matrix<N> {
     type Output = Self;
 
-    fn mul(self, rhs: T) -> Self::Output {
+    fn mul(self, rhs: f64) -> Self::Output {
         let mut res: Self::Output = Default::default();
         for i in 0..N {
             for j in 0..N {
@@ -95,10 +71,7 @@ where
     }
 }
 
-impl<T, const N: usize> FuzzyEq for Matrix<T, N>
-where
-    T: Float + FuzzyEq,
-{
+impl<const N: usize> FuzzyEq for Matrix<N> {
     fn fuzzy_eq(&self, other: Self) -> bool {
         for i in 0..N {
             for j in 0..N {
@@ -111,14 +84,11 @@ where
     }
 }
 
-impl<T, const N: usize> Matrix<T, N>
-where
-    T: Float,
-{
+impl<const N: usize> Matrix<N> {
     pub fn identity() -> Self {
         let mut res = Self::default();
         for i in 0..N {
-            res[i][i] = T::one();
+            res[i][i] = 1.0;
         }
         res
     }
@@ -136,11 +106,8 @@ where
 
 // The implementation for determinant is special for 2x2.
 // Bigger matricies have a more general solution.
-impl<T> Matrix<T, 2>
-where
-    T: Float,
-{
-    pub fn determinant(&self) -> T {
+impl Matrix<2> {
+    pub fn determinant(&self) -> f64 {
         self[0][0] * self[1][1] - self[1][0] * self[0][1]
     }
 }
@@ -149,12 +116,9 @@ where
 // not have to write this code twice is to define it as a macro.
 macro_rules! submatrix_ops {
     ($size:literal, $down_size:literal) => {
-        impl<T> Matrix<T, $size>
-        where
-            T: Float + FuzzyEq,
-        {
-            pub fn submatrix(&self, remove_row: usize, remove_col: usize) -> Matrix<T, $down_size> {
-                let mut res: Matrix<T, $down_size> = Default::default();
+        impl Matrix<$size> {
+            pub fn submatrix(&self, remove_row: usize, remove_col: usize) -> Matrix<$down_size> {
+                let mut res: Matrix<$down_size> = Default::default();
 
                 let mut source_row = 0;
                 let mut source_col = 0;
@@ -185,11 +149,11 @@ macro_rules! submatrix_ops {
                 res
             }
 
-            pub fn minor(&self, remove_row: usize, remove_col: usize) -> T {
+            pub fn minor(&self, remove_row: usize, remove_col: usize) -> f64 {
                 self.submatrix(remove_row, remove_col).determinant()
             }
 
-            pub fn cofactor(&self, remove_row: usize, remove_col: usize) -> T {
+            pub fn cofactor(&self, remove_row: usize, remove_col: usize) -> f64 {
                 let minor = self.minor(remove_row, remove_col);
                 if (remove_row + remove_col) % 2 == 0 {
                     minor
@@ -198,8 +162,8 @@ macro_rules! submatrix_ops {
                 }
             }
 
-            pub fn determinant(&self) -> T {
-                let mut res = T::zero();
+            pub fn determinant(&self) -> f64 {
+                let mut res = 0.0;
                 for i in 0..$size {
                     res = res + self[0][i] * self.cofactor(0, i);
                 }
@@ -207,7 +171,7 @@ macro_rules! submatrix_ops {
             }
 
             pub fn is_invertible(&self) -> bool {
-                self.determinant().fuzzy_ne(T::zero())
+                self.determinant().fuzzy_ne(0.0)
             }
 
             pub fn inverse(&self) -> Self {
@@ -237,43 +201,37 @@ pub enum Rotation {
     Z,
 }
 
-pub enum Shear<T>
-where
-    T: Float,
-{
-    XY(T),
-    XZ(T),
-    YX(T),
-    YZ(T),
-    ZX(T),
-    ZY(T),
+pub enum Shear {
+    XY(f64),
+    XZ(f64),
+    YX(f64),
+    YZ(f64),
+    ZX(f64),
+    ZY(f64),
 }
 
-impl<T> Matrix<T, 4>
-where
-    T: Float,
-{
+impl Matrix<4> {
     #[rustfmt::skip]
-    pub fn translate(x: T, y: T, z: T) -> Self {
+    pub fn translate(x: f64, y: f64, z: f64) -> Self {
         Matrix::from([
-            [T::one() , T::zero(), T::zero(), x       ],
-            [T::zero(), T::one() , T::zero(), y       ],
-            [T::zero(), T::zero(), T::one(),  z       ],
-            [T::zero(), T::zero(), T::zero(), T::one()],
+            [1.0, 0.0, 0.0, x  ],
+            [0.0, 1.0, 0.0, y  ],
+            [0.0, 0.0, 1.0, z  ],
+            [0.0, 0.0, 0.0, 1.0],
         ])
     }
 
     #[rustfmt::skip]
-    pub fn scale(x: T, y: T, z: T) -> Self {
+    pub fn scale(x: f64, y: f64, z: f64) -> Self {
         Matrix::from([
-            [x        , T::zero(), T::zero(), T::zero()],
-            [T::zero(), y        , T::zero(), T::zero()],
-            [T::zero(), T::zero(), z        , T::zero()],
-            [T::zero(), T::zero(), T::zero(), T::one() ],
+            [x,   0.0, 0.0, 0.0],
+            [0.0, y,   0.0, 0.0],
+            [0.0, 0.0, z,   0.0],
+            [0.0, 0.0, 0.0, 1.0],
         ])
     }
 
-    pub fn rotate(dir: Rotation, theta: T) -> Self {
+    pub fn rotate(dir: Rotation, theta: f64) -> Self {
         match dir {
             Rotation::X => Matrix::rotate_x(theta),
             Rotation::Y => Matrix::rotate_y(theta),
@@ -282,36 +240,36 @@ where
     }
 
     #[rustfmt::skip]
-    pub fn rotate_x(theta: T) -> Self {
+    pub fn rotate_x(theta: f64) -> Self {
         Matrix::from([
-            [T::one() , T::zero()  , T::zero()   , T::zero()],
-            [T::zero(), theta.cos(), -theta.sin(), T::zero()],
-            [T::zero(), theta.sin(), theta.cos() , T::zero()],
-            [T::zero(), T::zero()  , T::zero()   , T::one() ],
+            [1.0, 0.0,         0.0,          0.0],
+            [0.0, theta.cos(), -theta.sin(), 0.0],
+            [0.0, theta.sin(), theta.cos(),  0.0],
+            [0.0, 0.0,         0.0,          1.0],
         ])
     }
 
     #[rustfmt::skip]
-    pub fn rotate_y(theta: T) -> Self {
+    pub fn rotate_y(theta: f64) -> Self {
         Matrix::from([
-            [theta.cos() , T::zero(), theta.sin(), T::zero()],
-            [T::zero()   , T::one() , T::zero()  , T::zero()],
-            [-theta.sin(), T::zero(), theta.cos(), T::zero()],
-            [T::zero()   , T::zero(), T::zero()  , T::one() ],
+            [theta.cos(),  0.0, theta.sin(), 0.0],
+            [0.0,          1.0, 0.0,         0.0],
+            [-theta.sin(), 0.0, theta.cos(), 0.0],
+            [0.0,          0.0, 0.0,         1.0],
         ])
     }
 
     #[rustfmt::skip]
-    pub fn rotate_z(theta: T) -> Self {
+    pub fn rotate_z(theta: f64) -> Self {
         Matrix::from([
-            [theta.cos(), -theta.sin(), T::zero(), T::zero()],
-            [theta.sin(), theta.cos() , T::zero(), T::zero()],
-            [T::zero()  , T::zero()   , T::one() , T::zero()],
-            [T::zero()  , T::zero()   , T::zero(), T::one() ],
+            [theta.cos(), -theta.sin(), 0.0, 0.0],
+            [theta.sin(), theta.cos(),  0.0, 0.0],
+            [0.0,         0.0,          1.0, 0.0],
+            [0.0,         0.0,          0.0, 1.0],
         ])
     }
 
-    pub fn shear(shears: &[Shear<T>]) -> Self {
+    pub fn shear(shears: &[Shear]) -> Self {
         let mut res = Self::identity();
         for sh in shears {
             match sh {
@@ -329,13 +287,10 @@ where
 
 // We only have 4-element vectors and points so let's only implement matrix-tuple
 // multiplication between 4x4 matrices and 4 element tuples.
-impl<T, U> Mul<Tuple<T, U, 4>> for Matrix<T, 4>
-where
-    T: Float,
-{
-    type Output = Tuple<T, U, 4>;
+impl<T> Mul<Tuple<T, 4>> for Matrix<4> {
+    type Output = Tuple<T, 4>;
 
-    fn mul(self, rhs: Tuple<T, U, 4>) -> Self::Output {
+    fn mul(self, rhs: Tuple<T, 4>) -> Self::Output {
         let mut res = Self::Output::default();
         for i in 0..4 {
             let row = self[i];
@@ -382,7 +337,7 @@ mod tests {
 
     #[test]
     fn matrix_multiplication_with_vector() {
-        let m = Matrix::<f64, 4>::from([
+        let m = Matrix::from([
             [1.0, 2.0, 3.0, 4.0],
             [2.0, 4.0, 4.0, 2.0],
             [8.0, 6.0, 4.0, 1.0],
@@ -397,7 +352,7 @@ mod tests {
 
     #[test]
     fn matrix_multiplication_with_point() {
-        let m = Matrix::<f64, 4>::from([
+        let m = Matrix::from([
             [1.0, 2.0, 3.0, 4.0],
             [2.0, 4.0, 4.0, 2.0],
             [8.0, 6.0, 4.0, 1.0],
@@ -654,8 +609,8 @@ mod tests {
         assert_fuzzy_eq!(105.0, c32);
         assert_fuzzy_eq!(105.0 / 532.0, act[2][3]);
         assert_fuzzy_eq!(exp, act);
-        assert_fuzzy_eq!(Matrix::<f64, 4>::identity(), act * m);
-        assert_fuzzy_eq!(Matrix::<f64, 4>::identity(), m * act);
+        assert_fuzzy_eq!(Matrix::<4>::identity(), act * m);
+        assert_fuzzy_eq!(Matrix::<4>::identity(), m * act);
     }
 
     #[test]

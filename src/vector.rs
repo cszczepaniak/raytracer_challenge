@@ -1,5 +1,3 @@
-use num_traits::Float;
-
 use crate::{
     point::Point,
     tuple::{Tuple, TupleAdd, TupleSub},
@@ -12,21 +10,18 @@ pub struct VectTuple {}
 impl TupleAdd for VectTuple {}
 impl TupleSub for VectTuple {}
 
-pub type Vector<T> = Tuple<T, VectTuple, 4>;
+pub type Vector = Tuple<VectTuple, 4>;
 
-impl<T> Vector<T>
-where
-    T: Float,
-{
-    pub fn new(x: T, y: T, z: T) -> Self {
-        Vector::from([x, y, z, T::zero()])
+impl Vector {
+    pub fn new(x: f64, y: f64, z: f64) -> Self {
+        Vector::from([x, y, z, 0.0])
     }
 
-    pub fn dot(&self, other: &Vector<T>) -> T {
+    pub fn dot(&self, other: &Vector) -> f64 {
         self[0] * other[0] + self[1] * other[1] + self[2] * other[2] + self[3] * other[3]
     }
 
-    pub fn cross(&self, other: &Vector<T>) -> Vector<T> {
+    pub fn cross(&self, other: &Vector) -> Vector {
         Vector::new(
             self[1] * other[2] - self[2] * other[1],
             self[2] * other[0] - self[0] * other[2],
@@ -34,21 +29,18 @@ where
         )
     }
 
-    pub fn magnitude(&self) -> T {
+    pub fn magnitude(&self) -> f64 {
         (self[0] * self[0] + self[1] * self[1] + self[2] * self[2]).sqrt()
     }
 
-    pub fn normalize(&self) -> Vector<T> {
+    pub fn normalize(&self) -> Vector {
         let mag = self.magnitude();
         Vector::new(self[0], self[1], self[2]) / mag
     }
 }
 
-impl<T> Into<Point<T>> for Vector<T>
-where
-    T: Float,
-{
-    fn into(self) -> Point<T> {
+impl Into<Point> for Vector {
+    fn into(self) -> Point {
         Point::new(self[0], self[1], self[2])
     }
 }

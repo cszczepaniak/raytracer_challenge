@@ -1,5 +1,3 @@
-use num_traits::Float;
-
 use crate::color::Color;
 
 pub mod to_png;
@@ -11,20 +9,14 @@ pub trait Rectangle {
     fn height(&self) -> usize;
 }
 
-pub struct Canvas<T>
-where
-    T: Float,
-{
+pub struct Canvas {
     pub width: usize,
     pub height: usize,
 
-    pixels: Vec<Color<T>>,
+    pixels: Vec<Color>,
 }
 
-impl<T> Rectangle for Canvas<T>
-where
-    T: Float,
-{
+impl Rectangle for Canvas {
     fn width(&self) -> usize {
         self.width
     }
@@ -34,10 +26,7 @@ where
     }
 }
 
-impl<T> Canvas<T>
-where
-    T: Float,
-{
+impl Canvas {
     pub fn new(width: usize, height: usize) -> Self {
         Canvas {
             width,
@@ -46,12 +35,12 @@ where
         }
     }
 
-    pub fn write_pixel(&mut self, x: usize, y: usize, c: Color<T>) {
+    pub fn write_pixel(&mut self, x: usize, y: usize, c: Color) {
         let idx = self.pixel_index_at(x, y);
         self.pixels[idx] = c;
     }
 
-    pub fn read_pixel(&self, x: usize, y: usize) -> Color<T> {
+    pub fn read_pixel(&self, x: usize, y: usize) -> Color {
         self.pixels[self.pixel_index_at(x, y)]
     }
 

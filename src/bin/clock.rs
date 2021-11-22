@@ -14,7 +14,7 @@ enum Pixel {
 }
 
 impl Pixel {
-    pub fn from_point_for_canvas(point: &Point<f64>, canvas: &Canvas<f64>) -> Pixel {
+    pub fn from_point_for_canvas(point: &Point, canvas: &Canvas) -> Pixel {
         let x = point[0];
         let y = point[1];
         if x < 0.0 || y < 0.0 {
@@ -69,7 +69,7 @@ fn main() {
             // ray is a vector representing the segment from the origin to the point on the clock
             let ray = rotated - origin;
             // scaled is the ray, but scaled down towards the origin by 1 pixel
-            let scaled: Point<_> = (ray.normalize() * (ray.magnitude() - i as f64)).into();
+            let scaled: Point = (ray.normalize() * (ray.magnitude() - i as f64)).into();
 
             let l_px = Pixel::from_point_for_canvas(&(translation * scaled), &canvas);
             if let Pixel::Coordinate { x, y } = l_px {

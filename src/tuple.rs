@@ -1,37 +1,26 @@
 use std::marker::PhantomData;
 
-use num_traits::Float;
-
 use crate::utils::FuzzyEq;
 
 #[derive(Clone, Copy, Debug)]
-pub struct Tuple<T, U, const N: usize>
-where
-    T: Float,
-{
-    data: [T; N],
-    marker: PhantomData<U>,
+pub struct Tuple<T, const N: usize> {
+    data: [f64; N],
+    marker: PhantomData<T>,
 }
 
 // Default can be generalized for all tuples.
-impl<T, U, const N: usize> Default for Tuple<T, U, N>
-where
-    T: Float,
-{
+impl<T, const N: usize> Default for Tuple<T, N> {
     fn default() -> Self {
         Self {
-            data: [T::zero(); N],
+            data: [0.0; N],
             marker: Default::default(),
         }
     }
 }
 
 // From<[T; N]> can be generalized for all tuples.
-impl<T, U, const N: usize> From<[T; N]> for Tuple<T, U, N>
-where
-    T: Float,
-{
-    fn from(data: [T; N]) -> Self {
+impl<T, const N: usize> From<[f64; N]> for Tuple<T, N> {
+    fn from(data: [f64; N]) -> Self {
         Tuple {
             data,
             marker: PhantomData,
@@ -40,31 +29,24 @@ where
 }
 
 // Indexing can be generalized for all tuples.
-impl<T, U, const N: usize> std::ops::Index<usize> for Tuple<T, U, N>
-where
-    T: Float,
-{
-    type Output = T;
+impl<T, const N: usize> std::ops::Index<usize> for Tuple<T, N> {
+    type Output = f64;
 
     fn index(&self, index: usize) -> &Self::Output {
         &self.data[index]
     }
 }
 
-impl<T, U, const N: usize> std::ops::IndexMut<usize> for Tuple<T, U, N>
-where
-    T: Float,
-{
+impl<T, const N: usize> std::ops::IndexMut<usize> for Tuple<T, N> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.data[index]
     }
 }
 
 // FuzzyEq can be generalized for all tuples.
-impl<T, U, const N: usize> FuzzyEq for Tuple<T, U, N>
+impl<T, const N: usize> FuzzyEq for Tuple<T, N>
 where
-    T: Float + FuzzyEq,
-    U: Copy,
+    T: Copy,
 {
     fn fuzzy_eq(&self, other: Self) -> bool {
         for i in 0..N {
@@ -77,13 +59,10 @@ where
 }
 
 // Scalar multiplication can be generalized for all tuples.
-impl<T, U, const N: usize> std::ops::Mul<T> for Tuple<T, U, N>
-where
-    T: Float,
-{
+impl<T, const N: usize> std::ops::Mul<f64> for Tuple<T, N> {
     type Output = Self;
 
-    fn mul(self, rhs: T) -> Self::Output {
+    fn mul(self, rhs: f64) -> Self::Output {
         let mut out = Self::Output::default();
         for i in 0..N {
             out[i] = self[i] * rhs;
@@ -93,32 +72,26 @@ where
 }
 
 // Scalar division follows from scalar multiplication.
-impl<T, U, const N: usize> std::ops::Div<T> for Tuple<T, U, N>
-where
-    T: Float,
-{
+impl<T, const N: usize> std::ops::Div<f64> for Tuple<T, N> {
     type Output = Self;
 
-    fn div(self, rhs: T) -> Self::Output {
+    fn div(self, rhs: f64) -> Self::Output {
         let mut out = Self::Output::default();
         for i in 0..N {
-            out[i] = self[i] * T::one() / rhs;
+            out[i] = self[i] * 1.0 / rhs;
         }
         out
     }
 }
 
 // Negation follows from scalar multiplication.
-impl<T, U, const N: usize> std::ops::Neg for Tuple<T, U, N>
-where
-    T: Float,
-{
+impl<T, const N: usize> std::ops::Neg for Tuple<T, N> {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
         let mut out = Self::Output::default();
         for i in 0..N {
-            out[i] = self[i] * -T::one();
+            out[i] = self[i] * -1.0;
         }
         out
     }
@@ -126,10 +99,9 @@ where
 
 // Implementation for tuple addition. You get this if your U implements TupleAdd.
 pub trait TupleAdd {}
-impl<T, U, const N: usize> std::ops::Add for Tuple<T, U, N>
+impl<T, const N: usize> std::ops::Add for Tuple<T, N>
 where
-    T: Float,
-    U: TupleAdd,
+    T: TupleAdd,
 {
     type Output = Self;
 
@@ -146,10 +118,9 @@ where
 // TODO if you want an output type other than Self, I _think_ we'd need GATs which are not stable yet...
 // For now, for Point subtraction, we'll have to implement it explicitly.
 pub trait TupleSub {}
-impl<T, U, const N: usize> std::ops::Sub for Tuple<T, U, N>
+impl<T, const N: usize> std::ops::Sub for Tuple<T, N>
 where
-    T: Float,
-    U: TupleSub,
+    T: TupleSub,
 {
     type Output = Self;
 
@@ -165,10 +136,9 @@ where
 // Implementation for elementwise multiplication. You get this if your U implements ElementwiseMul.
 pub trait ElementwiseMul {}
 
-impl<T, U, const N: usize> std::ops::Mul for Tuple<T, U, N>
+impl<T, const N: usize> std::ops::Mul for Tuple<T, N>
 where
-    T: Float,
-    U: ElementwiseMul,
+    T: ElementwiseMul,
 {
     type Output = Self;
 
@@ -191,11 +161,11 @@ mod tests {
 
     #[derive(Clone, Copy, Debug)]
     struct TestTuple {}
-    type Test<T> = Tuple<T, TestTuple, 4>;
+    type Test = Tuple<TestTuple, 4>;
 
     #[test]
     fn test_mut_indexing() {
-        let mut t = Test::<f64>::default();
+        let mut t = Test::default();
         t[0] = 1.0;
         t[1] = 2.0;
         t[2] = 3.0;
@@ -216,14 +186,14 @@ mod tests {
     #[test]
     #[should_panic(expected = "index out of bounds")]
     fn test_indexing_out_of_bounds() {
-        let t = Test::<f64>::default();
+        let t = Test::default();
         let _ = t[5];
     }
 
     #[test]
     #[should_panic(expected = "index out of bounds")]
     fn test_mut_indexing_out_of_bounds() {
-        let mut t = Test::<f64>::default();
+        let mut t = Test::default();
         t[5] = 6.0;
     }
 
@@ -276,11 +246,5 @@ mod tests {
         let t2 = Test::from([1.0, 2.0, 3.0, 4.0]);
         let res = t1 - t2;
         assert_fuzzy_eq!(Test::from([-5.0, 1.0, -5.0, -3.0]), res);
-    }
-
-    #[test]
-    fn test_f32() {
-        let t = Test::from([1.0f32, 1.0, 1.0, 1.0]);
-        assert_fuzzy_eq!([1.0f32, 1.0, 1.0, 1.0], t.data);
     }
 }
