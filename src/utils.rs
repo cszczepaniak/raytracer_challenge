@@ -25,6 +25,19 @@ where
     }
 }
 
+impl<T> FuzzyEq for Option<T>
+where
+    T: Copy + FuzzyEq,
+{
+    fn fuzzy_eq(&self, other: Self) -> bool {
+        match (self, other) {
+            (None, None) => true,
+            (Some(a), Some(b)) => a.fuzzy_eq(b),
+            (_, _) => false,
+        }
+    }
+}
+
 #[macro_export]
 macro_rules! assert_fuzzy_eq {
     ($x:expr, $y:expr) => {

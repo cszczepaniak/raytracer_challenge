@@ -1,16 +1,12 @@
-use crate::{matrix::Matrix, point::Point, ray::Ray};
+use crate::{
+    intersection::{Intersectable, Intersection, Intersections},
+    matrix::Matrix,
+    point::Point,
+    ray::Ray,
+    utils::FuzzyEq,
+};
 
-pub struct Intersection {
-    t: f64,
-}
-
-impl Intersection {
-    pub fn new(t: f64) -> Self {
-        Self { t }
-    }
-}
-
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Sphere {
     transform: Matrix<4>,
 }
@@ -23,12 +19,14 @@ impl Default for Sphere {
     }
 }
 
-impl Sphere {
-    fn with_transform(transform: Matrix<4>) -> Self {
-        Self { transform }
+impl FuzzyEq for Sphere {
+    fn fuzzy_eq(&self, other: Self) -> bool {
+        self.transform.fuzzy_eq(other.transform)
     }
+}
 
-    pub fn intersect(&self, r: Ray) -> Vec<Intersection> {
+impl Intersectable<Sphere> for Sphere {
+    fn intersect(&self, r: Ray) -> Intersections<Sphere> {
         let object_space_ray = r.transform(self.transform.inverse());
 
         let sphere_to_ray = object_space_ray.origin - Point::new(0.0, 0.0, 0.0);
@@ -38,20 +36,25 @@ impl Sphere {
 
         let descriminant = b * b - 4.0 * a * c;
         if descriminant < 0.0 {
-            vec![]
+            vec![].into()
         } else {
             let t1 = (-b - descriminant.sqrt()) / (2.0 * a);
             let t2 = (-b + descriminant.sqrt()) / (2.0 * a);
-            vec![Intersection::new(t1), Intersection::new(t2)]
+            vec![Intersection::new(t1, self), Intersection::new(t2, self)].into()
         }
+    }
+}
+
+impl Sphere {
+    fn with_transform(transform: Matrix<4>) -> Self {
+        Self { transform }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{assert_fuzzy_eq, color::Color, ray::Ray, utils::FuzzyEq, vector::Vector};
-    use std::f64::consts::PI;
+    use crate::{assert_fuzzy_eq, ray::Ray, utils::FuzzyEq, vector::Vector};
 
     #[test]
     fn a_ray_intersects_a_sphere_at_two_points() {
