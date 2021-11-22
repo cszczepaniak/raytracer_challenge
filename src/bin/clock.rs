@@ -7,28 +7,17 @@ use raytracer::{
     point::Point,
 };
 
-#[derive(Debug)]
-enum Pixel {
-    Coordinate { x: usize, y: usize },
-    OutOfBounds,
-}
-
-impl Pixel {
-    pub fn from_point_for_canvas(point: &Point, canvas: &Canvas) -> Pixel {
-        let x = point[0];
-        let y = point[1];
-        if x < 0.0 || y < 0.0 {
-            return Pixel::OutOfBounds;
-        }
-        if x.round() as usize >= canvas.width || y.round() as usize >= canvas.height {
-            return Pixel::OutOfBounds;
-        }
-
-        Pixel::Coordinate {
-            x: x.round() as usize,
-            y: canvas.height - 1 - y.round() as usize,
-        }
+pub fn pixel_from_point(point: &Point, canvas: &Canvas) -> Option<(usize, usize)> {
+    let x = point[0];
+    let y = point[1];
+    if x < 0.0 || y < 0.0 {
+        return None;
     }
+    if x.round() as usize >= canvas.width || y.round() as usize >= canvas.height {
+        return None;
+    }
+
+    Some((x.round() as usize, canvas.height - 1 - y.round() as usize))
 }
 
 fn main() {
@@ -45,15 +34,15 @@ fn main() {
     for i in 0..12 {
         let rotation = Matrix::rotate(Rotation::Z, (2.0 * PI * (i as f64)) / 12.0);
         let rotated = translation * rotation * pt;
-        let px = Pixel::from_point_for_canvas(&rotated, &canvas);
+        let px = pixel_from_point(&rotated, &canvas);
         let x;
         let y;
         match px {
-            Pixel::Coordinate { x: cx, y: cy } => {
+            Some((cx, cy)) => {
                 x = cx;
                 y = cy;
             }
-            Pixel::OutOfBounds => {
+            None => {
                 println!("out of bounds");
                 break;
             }
@@ -71,8 +60,8 @@ fn main() {
             // scaled is the ray, but scaled down towards the origin by 1 pixel
             let scaled: Point = (ray.normalize() * (ray.magnitude() - i as f64)).into();
 
-            let l_px = Pixel::from_point_for_canvas(&(translation * scaled), &canvas);
-            if let Pixel::Coordinate { x, y } = l_px {
+            let l_px = pixel_from_point(&(translation * scaled), &canvas);
+            if let Some((x, y)) = l_px {
                 canvas.write_pixel(x, y, color);
             }
         }
