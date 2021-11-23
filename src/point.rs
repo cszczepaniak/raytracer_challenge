@@ -23,9 +23,9 @@ impl Add<Vector> for Point {
     }
 }
 
-impl Into<Vector> for Point {
-    fn into(self) -> Vector {
-        Vector::new(self[0], self[1], self[2])
+impl From<Vector> for Point {
+    fn from(v: Vector) -> Point {
+        Point::new(v[0], v[1], v[2])
     }
 }
 

@@ -16,7 +16,7 @@ where
     T: ToRgba + Rectangle,
 {
     fn to_ppm(&self) -> Vec<u8> {
-        let mut res = Vec::from(self.ppm_header());
+        let mut res = self.ppm_header();
         let mut pixels_written = 0usize;
         let mut row_width = 0usize;
         for bytes in self.to_rgba().chunks(4) {

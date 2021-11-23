@@ -39,9 +39,9 @@ impl Vector {
     }
 }
 
-impl Into<Point> for Vector {
-    fn into(self) -> Point {
-        Point::new(self[0], self[1], self[2])
+impl From<Point> for Vector {
+    fn from(p: Point) -> Vector {
+        Vector::new(p[0], p[1], p[2])
     }
 }
 

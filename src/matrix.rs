@@ -48,7 +48,7 @@ impl<const N: usize> Mul for Matrix<N> {
             for j in 0..N {
                 let mut sum = 0.0;
                 for k in 0..N {
-                    sum = sum + self[i][k] * rhs[k][j];
+                    sum += self[i][k] * rhs[k][j];
                 }
                 res[i][j] = sum;
             }
@@ -64,7 +64,7 @@ impl<const N: usize> Mul<f64> for Matrix<N> {
         let mut res: Self::Output = Default::default();
         for i in 0..N {
             for j in 0..N {
-                res[i][j] = rhs * res[i][j];
+                res[i][j] *= rhs;
             }
         }
         res
@@ -165,7 +165,7 @@ macro_rules! submatrix_ops {
             pub fn determinant(&self) -> f64 {
                 let mut res = 0.0;
                 for i in 0..$size {
-                    res = res + self[0][i] * self.cofactor(0, i);
+                    res += self[0][i] * self.cofactor(0, i);
                 }
                 res
             }
@@ -272,13 +272,13 @@ impl Matrix<4> {
     pub fn shear(shears: &[Shear]) -> Self {
         let mut res = Self::identity();
         for sh in shears {
-            match sh {
-                &Shear::XY(v) => res[0][1] = v,
-                &Shear::XZ(v) => res[0][2] = v,
-                &Shear::YX(v) => res[1][0] = v,
-                &Shear::YZ(v) => res[1][2] = v,
-                &Shear::ZX(v) => res[2][0] = v,
-                &Shear::ZY(v) => res[2][1] = v,
+            match *sh {
+                Shear::XY(v) => res[0][1] = v,
+                Shear::XZ(v) => res[0][2] = v,
+                Shear::YX(v) => res[1][0] = v,
+                Shear::YZ(v) => res[1][2] = v,
+                Shear::ZX(v) => res[2][0] = v,
+                Shear::ZY(v) => res[2][1] = v,
             };
         }
         res
@@ -295,7 +295,7 @@ impl<T> Mul<Tuple<T, 4>> for Matrix<4> {
         for i in 0..4 {
             let row = self[i];
             for j in 0..4 {
-                res[i] = res[i] + row[j] * rhs[j];
+                res[i] += row[j] * rhs[j];
             }
         }
         res

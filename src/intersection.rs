@@ -23,7 +23,7 @@ where
     T: Intersectable<T> + FuzzyEq,
 {
     pub fn new(t: f64, body: &'a T) -> Self {
-        Self { t, body: &body }
+        Self { t, body }
     }
 }
 
