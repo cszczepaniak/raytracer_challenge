@@ -14,13 +14,16 @@ fn main() {
     let wall_z = 5.0;
     let wall_size = 10.0;
 
-    let canvas_size = 512;
+    let canvas_size = 1024;
     let pixel_world_ratio = wall_size / canvas_size as f64;
 
     let color = Color::new(0.5, 0.2, 0.1);
     let mut canvas = Canvas::new(canvas_size, canvas_size);
 
     let sphere = Sphere::default();
+
+    let progress = indicatif::ProgressBar::new((canvas_size * canvas_size) as u64);
+    progress.set_draw_rate(5);
 
     for row in 0..canvas_size {
         for col in 0..canvas_size {
@@ -35,8 +38,10 @@ fn main() {
             if intersections.hit().is_some() {
                 canvas.write_pixel(col, row, color);
             }
+            progress.inc(1);
         }
     }
+    progress.finish();
 
     println!("Saving to PNG...");
     let f = fs::File::create("output.png").expect("error creating 'output.png'");
