@@ -1,3 +1,6 @@
 /target
 *.ppm
 *.png
+perf.*
+stacks.folded
+*.svg

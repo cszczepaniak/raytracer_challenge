@@ -46,8 +46,7 @@ impl Intersectable<Sphere> for Sphere {
 }
 
 impl Sphere {
-    #[allow(dead_code)]
-    fn with_transform(transform: Matrix<4>) -> Self {
+    pub fn with_transform(transform: Matrix<4>) -> Self {
         Self { transform }
     }
 }
