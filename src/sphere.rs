@@ -1,5 +1,6 @@
 use crate::{
     intersection::{Intersectable, Intersection, Intersections},
+    material::{Illuminated, Phong},
     matrix::Matrix,
     point::Point,
     ray::Ray,
@@ -8,26 +9,40 @@ use crate::{
 };
 
 #[derive(Clone, Copy, Debug)]
-pub struct Sphere {
+pub struct Sphere<T = Phong>
+where
+    T: Illuminated,
+{
     transform: Matrix<4>,
+    material: T,
 }
 
-impl Default for Sphere {
+impl<T> Default for Sphere<T>
+where
+    T: Illuminated + Default,
+{
     fn default() -> Self {
         Self {
             transform: Matrix::identity(),
+            material: T::default(),
         }
     }
 }
 
-impl FuzzyEq for Sphere {
+impl<T> FuzzyEq for Sphere<T>
+where
+    T: Illuminated + Copy,
+{
     fn fuzzy_eq(&self, other: Self) -> bool {
         self.transform.fuzzy_eq(other.transform)
     }
 }
 
-impl Intersectable<Sphere> for Sphere {
-    fn intersect(&self, r: Ray) -> Intersections<Sphere> {
+impl<T> Intersectable<Sphere<T>> for Sphere<T>
+where
+    T: Illuminated + Copy,
+{
+    fn intersect(&self, r: Ray) -> Intersections<Sphere<T>> {
         let object_space_ray = r.transform(self.transform.inverse());
 
         let sphere_to_ray = object_space_ray.origin - Point::new(0.0, 0.0, 0.0);
@@ -54,9 +69,22 @@ impl Intersectable<Sphere> for Sphere {
     }
 }
 
-impl Sphere {
-    pub fn with_transform(transform: Matrix<4>) -> Self {
-        Self { transform }
+impl<T> Sphere<T>
+where
+    T: Illuminated + Default,
+{
+    pub fn with_transform(self, transform: Matrix<4>) -> Self {
+        Self {
+            transform,
+            material: self.material,
+        }
+    }
+
+    pub fn with_material(self, material: T) -> Self {
+        Self {
+            material,
+            transform: self.transform,
+        }
     }
 }
 
@@ -65,14 +93,22 @@ mod tests {
     use std::f64::consts::{FRAC_1_SQRT_2, PI};
 
     use super::*;
-    use crate::{assert_fuzzy_eq, matrix::Rotation, ray::Ray, utils::FuzzyEq, vector::Vector};
+    use crate::{
+        assert_fuzzy_eq,
+        color::Color,
+        material::{Phong, PhongAttribute},
+        matrix::Rotation,
+        ray::Ray,
+        utils::FuzzyEq,
+        vector::Vector,
+    };
 
     const FRAC_1_SQRT_3: f64 = 0.57735026919;
 
     #[test]
     fn a_ray_intersects_a_sphere_at_two_points() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
-        let s = Sphere::default();
+        let s: Sphere = Sphere::default();
 
         let xs = s.intersect(r);
 
@@ -84,7 +120,7 @@ mod tests {
     #[test]
     fn a_ray_intersects_a_sphere_at_a_tangent() {
         let r = Ray::new(Point::new(0.0, 1.0, -5.0), Vector::new(0.0, 0.0, 1.0));
-        let s = Sphere::default();
+        let s: Sphere = Sphere::default();
 
         let xs = s.intersect(r);
 
@@ -96,7 +132,7 @@ mod tests {
     #[test]
     fn a_ray_misses_a_sphere() {
         let r = Ray::new(Point::new(0.0, 2.0, -5.0), Vector::new(0.0, 0.0, 1.0));
-        let s = Sphere::default();
+        let s: Sphere = Sphere::default();
 
         let xs = s.intersect(r);
 
@@ -106,7 +142,7 @@ mod tests {
     #[test]
     fn a_ray_originates_inside_a_sphere() {
         let r = Ray::new(Point::new(0.0, 0.0, 0.0), Vector::new(0.0, 0.0, 1.0));
-        let s = Sphere::default();
+        let s: Sphere = Sphere::default();
 
         let xs = s.intersect(r);
 
@@ -118,7 +154,7 @@ mod tests {
     #[test]
     fn a_sphere_is_behind_a_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, 5.0), Vector::new(0.0, 0.0, 1.0));
-        let s = Sphere::default();
+        let s: Sphere = Sphere::default();
 
         let xs = s.intersect(r);
 
@@ -129,13 +165,13 @@ mod tests {
 
     #[test]
     fn a_spheres_default_transform() {
-        let s = Sphere::default();
+        let s: Sphere = Sphere::default();
         assert_fuzzy_eq!(s.transform, Matrix::<4>::identity());
     }
 
     #[test]
     fn changing_a_spheres_transform() {
-        let mut s = Sphere::default();
+        let mut s: Sphere<Phong> = Sphere::default();
         let m = Matrix::translate(2.0, 3.0, 4.0);
         s.transform = m;
 
@@ -145,7 +181,7 @@ mod tests {
     #[test]
     fn intersecting_a_scaled_sphere_with_a_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
-        let s = Sphere::with_transform(Matrix::scale(2.0, 2.0, 2.0));
+        let s: Sphere = Sphere::default().with_transform(Matrix::scale(2.0, 2.0, 2.0));
 
         let xs = s.intersect(r);
 
@@ -157,7 +193,7 @@ mod tests {
     #[test]
     fn intersecting_a_translated_sphere_with_a_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
-        let s = Sphere::with_transform(Matrix::translate(5.0, 0.0, 0.0));
+        let s: Sphere = Sphere::default().with_transform(Matrix::translate(5.0, 0.0, 0.0));
 
         let xs = s.intersect(r);
 
@@ -166,7 +202,7 @@ mod tests {
 
     #[test]
     fn the_normal_on_a_sphere_at_a_point_on_the_x_axis() {
-        let s = Sphere::default();
+        let s: Sphere = Sphere::default();
         let n = s.normal_at(Point::new(1.0, 0.0, 0.0));
 
         let expected_result = Vector::new(1.0, 0.0, 0.0);
@@ -176,7 +212,7 @@ mod tests {
 
     #[test]
     fn the_normal_on_a_sphere_at_a_point_on_the_y_axis() {
-        let s = Sphere::default();
+        let s: Sphere = Sphere::default();
         let n = s.normal_at(Point::new(0.0, 1.0, 0.0));
 
         let expected_result = Vector::new(0.0, 1.0, 0.0);
@@ -186,7 +222,7 @@ mod tests {
 
     #[test]
     fn the_normal_on_a_sphere_at_a_point_on_the_z_axis() {
-        let s = Sphere::default();
+        let s: Sphere = Sphere::default();
         let n = s.normal_at(Point::new(0.0, 0.0, 1.0));
 
         let expected_result = Vector::new(0.0, 0.0, 1.0);
@@ -196,7 +232,7 @@ mod tests {
 
     #[test]
     fn the_normal_on_a_sphere_at_a_non_axial_point() {
-        let s = Sphere::default();
+        let s: Sphere = Sphere::default();
         let p = Point::new(FRAC_1_SQRT_3, FRAC_1_SQRT_3, FRAC_1_SQRT_3);
         let n = s.normal_at(p);
 
@@ -207,7 +243,7 @@ mod tests {
 
     #[test]
     fn computing_the_normal_on_a_translated_sphere() {
-        let s = Sphere::with_transform(Matrix::translate(0.0, 1.0, 0.0));
+        let s: Sphere = Sphere::default().with_transform(Matrix::translate(0.0, 1.0, 0.0));
         let p = Point::new(0.0, 1.70711, -0.70711);
         let n = s.normal_at(p);
 
@@ -218,9 +254,8 @@ mod tests {
 
     #[test]
     fn computing_the_normal_on_a_scaled_and_rotated_sphere() {
-        let s = Sphere::with_transform(
-            Matrix::scale(1.0, 0.5, 1.0) * Matrix::rotate(Rotation::Z, PI / 5.0),
-        );
+        let s: Sphere = Sphere::default()
+            .with_transform(Matrix::scale(1.0, 0.5, 1.0) * Matrix::rotate(Rotation::Z, PI / 5.0));
         let p = Point::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2);
         let n = s.normal_at(p);
 
@@ -231,7 +266,7 @@ mod tests {
 
     #[test]
     fn the_normal_vector_is_always_normalized() {
-        let s = Sphere::default();
+        let s: Sphere = Sphere::default();
         let p = Point::new(FRAC_1_SQRT_3, FRAC_1_SQRT_3, FRAC_1_SQRT_3);
         let n = s.normal_at(p);
 
@@ -240,29 +275,33 @@ mod tests {
 
     #[test]
     fn the_normal_vector_is_normalized_on_transformed_sphere() {
-        let s = Sphere::with_transform(
-            Matrix::scale(1.0, 0.5, 1.0) * Matrix::rotate(Rotation::Z, PI / 5.0),
-        );
+        let s: Sphere = Sphere::default()
+            .with_transform(Matrix::scale(1.0, 0.5, 1.0) * Matrix::rotate(Rotation::Z, PI / 5.0));
         let p = Point::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2);
         let n = s.normal_at(p);
 
         assert_fuzzy_eq!(n.normalize(), n);
     }
 
-    // #[test]
-    // fn sphere_has_default_phong_material() {
-    //     let s = Sphere::default();
-    //     let m = Material::default();
+    #[test]
+    fn sphere_has_default_phong_material() {
+        let s: Sphere = Sphere::default();
+        let m = Phong::default();
 
-    //     assert_fuzzy_eq!(s.material, m);
-    // }
+        assert_fuzzy_eq!(m, s.material);
+    }
 
-    // #[test]
-    // fn sphere_may_be_assigned_a_material() {
-    //     let phong = Phong::new(Color::new(1.0, 1.0, 0.0), 0.05, 0.7, 0.95, 400.0);
-    //     let m = Material::from(phong);
-    //     let s = Sphere::default().with_material(m);
+    #[test]
+    fn sphere_may_be_assigned_a_material() {
+        let phong = Phong::new(&[
+            PhongAttribute::Color(Color::new(1.0, 1.0, 0.0)),
+            PhongAttribute::Ambient(0.05),
+            PhongAttribute::Diffuse(0.7),
+            PhongAttribute::Specular(0.95),
+            PhongAttribute::Shininess(400.0),
+        ]);
+        let s = Sphere::default().with_material(phong);
 
-    //     assert_fuzzy_eq!(s.material, m);
-    // }
+        assert_fuzzy_eq!(phong, s.material);
+    }
 }

@@ -21,7 +21,7 @@ fn main() {
     let pixel_world_ratio = wall_size / canvas_size as f64;
 
     let color = Color::new(0.5, 0.2, 0.1);
-    let sphere = Sphere::with_transform(Matrix::identity());
+    let sphere: Sphere = Sphere::default().with_transform(Matrix::identity());
 
     let canvas_mutex = Mutex::new(Canvas::new(canvas_size, canvas_size));
 

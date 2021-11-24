@@ -1,7 +1,8 @@
-use crate::color::Color;
+use crate::{color::Color, utils::FuzzyEq};
 
 pub trait Illuminated {}
 
+#[derive(Clone, Copy, Debug)]
 pub struct Phong {
     pub color: Color,
     pub ambient: f64,
@@ -21,6 +22,16 @@ impl Default for Phong {
             specular: 0.9,
             shininess: 200.0,
         }
+    }
+}
+
+impl FuzzyEq for Phong {
+    fn fuzzy_eq(&self, other: Self) -> bool {
+        self.color.fuzzy_eq(other.color)
+            && self.ambient.fuzzy_eq(other.ambient)
+            && self.diffuse.fuzzy_eq(other.diffuse)
+            && self.specular.fuzzy_eq(other.specular)
+            && self.shininess.fuzzy_eq(other.shininess)
     }
 }
 
