@@ -18,13 +18,13 @@ fn main() {
     let wall_z = 11.0;
     let wall_size = 10.0;
 
-    let canvas_size = 2048;
+    let canvas_size = 4096;
     let pixel_world_ratio = wall_size / canvas_size as f64;
 
-    let material = Phong::new(&[PhongAttribute::Color(Color::new(1.0, 0.75, 0.0))]);
+    let material = Phong::new(&[PhongAttribute::Color(Color::new(0.1, 0.7, 1.0))]);
     let sphere: Sphere = Sphere::default().with_material(material);
 
-    let light = PointLight::new(Point::new(-10.0, 10.0, -10.0), Color::new(1.0, 1.0, 1.0));
+    let light = PointLight::new(Point::new(20.0, 30.0, -20.0), Color::new(1.0, 1.0, 1.0));
 
     let canvas_mutex = Mutex::new(Canvas::new(canvas_size, canvas_size));
 
