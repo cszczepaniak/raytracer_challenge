@@ -37,6 +37,10 @@ impl Vector {
         let mag = self.magnitude();
         Vector::new(self[0], self[1], self[2]) / mag
     }
+
+    pub fn reflect(&self, normal: Vector) -> Vector {
+        *self - normal * 2.0 * self.dot(&normal)
+    }
 }
 
 impl From<Point> for Vector {
@@ -47,6 +51,8 @@ impl From<Point> for Vector {
 
 #[cfg(test)]
 mod tests {
+    use std::f64::consts::FRAC_1_SQRT_2;
+
     use super::*;
     use crate::assert_fuzzy_eq;
     use crate::utils::FuzzyEq;
@@ -123,4 +129,22 @@ mod tests {
         norm_unit_vec3: (Vector::new(0.0, 0.0, 1.0), Vector::new(0.0, 0.0, 1.0)),
         norm_perfect_square: (Vector::new(3.0, 4.0, 12.0), Vector::new(3.0 / 13.0, 4.0 / 13.0, 12.0 / 13.0)),
     );
+
+    #[test]
+    fn reflecting_a_vector_at_45_degrees() {
+        let v = Vector::new(1.0, -1.0, 0.0);
+        let n = Vector::new(0.0, 1.0, 0.0);
+        let r = v.reflect(n);
+
+        assert_fuzzy_eq!(Vector::new(1.0, 1.0, 0.0), r)
+    }
+
+    #[test]
+    fn reflecting_a_vector_of_a_slanted_surface() {
+        let v = Vector::new(0.0, -1.0, 0.0);
+        let n = Vector::new(FRAC_1_SQRT_2, FRAC_1_SQRT_2, 0.0);
+        let r = v.reflect(n);
+
+        assert_fuzzy_eq!(Vector::new(1.0, 0.0, 0.0), r);
+    }
 }
