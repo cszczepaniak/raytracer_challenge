@@ -1,12 +1,13 @@
 use std::ops::{Index, IndexMut};
 
-use crate::{ray::Ray, utils::FuzzyEq};
+use crate::{point::Point, ray::Ray, utils::FuzzyEq, vector::Vector};
 
 pub trait Intersectable<T>
 where
     T: Intersectable<T> + FuzzyEq,
 {
     fn intersect(&self, r: Ray) -> Intersections<T>;
+    fn normal_at(&self, p: Point) -> Vector;
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -118,7 +119,7 @@ mod tests {
 
         let xs: Intersections<Sphere> = vec![i2, i1].into();
 
-        assert_fuzzy_eq!(xs.hit(), Some(&i1));
+        assert_fuzzy_eq!(Some(&i1), xs.hit());
     }
 
     #[test]
@@ -130,22 +131,21 @@ mod tests {
 
         let xs: Intersections<Sphere> = vec![i2, i1].into();
 
-        assert_fuzzy_eq!(xs.hit(), Some(&i2));
+        assert_fuzzy_eq!(Some(&i2), xs.hit());
     }
 
-    //   #[test]
-    //   fn the_hit_when_all_intersections_have_negative_t() {
-    //     let s = Sphere::default();
+    #[test]
+    fn the_hit_when_all_intersections_have_negative_t() {
+        let s = Sphere::default();
 
-    //     let r = Ray::new(Point::new(1.0, 1.0, 1.0), Vector::new(0.0, 0.0, 1.0));
+        let i1 = Intersection::new(-2.0, &s);
+        let i2 = Intersection::new(-1.0, &s);
 
-    //     let i1 = Intersection::new(-2.0, r, Body::from(s));
-    //     let i2 = Intersection::new(-1.0, r, Body::from(s));
+        let xs: Intersections<Sphere> = vec![i2, i1].into();
 
-    //     let xs = Intersections::new(vec![i2, i1]);
-
-    //     assert_eq!(xs.hit(), None);
-    //   }
+        let exp: Option<&Intersection<Sphere>> = None;
+        assert_fuzzy_eq!(xs.hit(), exp);
+    }
 
     //   #[test]
     //   fn precomputing_the_state_of_an_intersection() {

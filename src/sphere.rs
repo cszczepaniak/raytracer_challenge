@@ -4,6 +4,7 @@ use crate::{
     point::Point,
     ray::Ray,
     utils::FuzzyEq,
+    vector::Vector,
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -43,6 +44,14 @@ impl Intersectable<Sphere> for Sphere {
             vec![Intersection::new(t1, self), Intersection::new(t2, self)].into()
         }
     }
+
+    fn normal_at(&self, p: Point) -> Vector {
+        let t_inv = self.transform.inverse();
+        let object_point = t_inv * p;
+        let object_normal = (object_point - Point::new(0.0, 0.0, 0.0)).normalize();
+        let world_normal = t_inv.transpose() * object_normal;
+        Vector::new(world_normal[0], world_normal[1], world_normal[2]).normalize()
+    }
 }
 
 impl Sphere {
@@ -53,8 +62,12 @@ impl Sphere {
 
 #[cfg(test)]
 mod tests {
+    use std::f64::consts::{FRAC_1_SQRT_2, PI};
+
     use super::*;
-    use crate::{assert_fuzzy_eq, ray::Ray, utils::FuzzyEq, vector::Vector};
+    use crate::{assert_fuzzy_eq, matrix::Rotation, ray::Ray, utils::FuzzyEq, vector::Vector};
+
+    const FRAC_1_SQRT_3: f64 = 0.57735026919;
 
     #[test]
     fn a_ray_intersects_a_sphere_at_two_points() {
@@ -151,92 +164,90 @@ mod tests {
         assert_eq!(0, xs.len());
     }
 
-    // #[test]
-    // fn the_normal_on_a_sphere_at_a_point_on_the_x_axis() {
-    //     let s = Sphere::default();
-    //     let n = s.normal_at(Point::new(1.0, 0.0, 0.0));
+    #[test]
+    fn the_normal_on_a_sphere_at_a_point_on_the_x_axis() {
+        let s = Sphere::default();
+        let n = s.normal_at(Point::new(1.0, 0.0, 0.0));
 
-    //     let expected_result = Vector::new(1.0, 0.0, 0.0);
+        let expected_result = Vector::new(1.0, 0.0, 0.0);
 
-    //     assert_fuzzy_eq!(n, expected_result);
-    // }
+        assert_fuzzy_eq!(expected_result, n);
+    }
 
-    // #[test]
-    // fn the_normal_on_a_sphere_at_a_point_on_the_y_axis() {
-    //     let s = Sphere::default();
-    //     let n = s.normal_at(Point::new(0.0, 1.0, 0.0));
+    #[test]
+    fn the_normal_on_a_sphere_at_a_point_on_the_y_axis() {
+        let s = Sphere::default();
+        let n = s.normal_at(Point::new(0.0, 1.0, 0.0));
 
-    //     let expected_result = Vector::new(0.0, 1.0, 0.0);
+        let expected_result = Vector::new(0.0, 1.0, 0.0);
 
-    //     assert_fuzzy_eq!(n, expected_result);
-    // }
+        assert_fuzzy_eq!(expected_result, n);
+    }
 
-    // #[test]
-    // fn the_normal_on_a_sphere_at_a_point_on_the_z_axis() {
-    //     let s = Sphere::default();
-    //     let n = s.normal_at(Point::new(0.0, 0.0, 1.0));
+    #[test]
+    fn the_normal_on_a_sphere_at_a_point_on_the_z_axis() {
+        let s = Sphere::default();
+        let n = s.normal_at(Point::new(0.0, 0.0, 1.0));
 
-    //     let expected_result = Vector::new(0.0, 0.0, 1.0);
+        let expected_result = Vector::new(0.0, 0.0, 1.0);
 
-    //     assert_fuzzy_eq!(n, expected_result);
-    // }
+        assert_fuzzy_eq!(expected_result, n);
+    }
 
-    // #[test]
-    // fn the_normal_on_a_sphere_at_a_non_axial_point() {
-    //     let s = Sphere::default();
-    //     let sqrt3_over_3 = (3.0 as F).sqrt() / 3.0;
-    //     let p = Point::new(sqrt3_over_3, sqrt3_over_3, sqrt3_over_3);
-    //     let n = s.normal_at(p);
+    #[test]
+    fn the_normal_on_a_sphere_at_a_non_axial_point() {
+        let s = Sphere::default();
+        let p = Point::new(FRAC_1_SQRT_3, FRAC_1_SQRT_3, FRAC_1_SQRT_3);
+        let n = s.normal_at(p);
 
-    //     let expected_result = Vector::new(sqrt3_over_3, sqrt3_over_3, sqrt3_over_3);
+        let expected_result = Vector::new(FRAC_1_SQRT_3, FRAC_1_SQRT_3, FRAC_1_SQRT_3);
 
-    //     assert_fuzzy_eq!(n, expected_result);
-    // }
+        assert_fuzzy_eq!(expected_result, n);
+    }
 
-    // #[test]
-    // fn computing_the_normal_on_a_translated_sphere() {
-    //     let s = Sphere::default().with_transform(Matrix::translation(0.0, 1.0, 0.0));
-    //     let p = Point::new(0.0, 1.70711, -0.70711);
-    //     let n = s.normal_at(p);
+    #[test]
+    fn computing_the_normal_on_a_translated_sphere() {
+        let s = Sphere::with_transform(Matrix::translate(0.0, 1.0, 0.0));
+        let p = Point::new(0.0, 1.70711, -0.70711);
+        let n = s.normal_at(p);
 
-    //     let expected_result = Vector::new(0.0, 0.70711, -0.70711);
+        let expected_result = Vector::new(0.0, 0.70711, -0.70711);
 
-    //     assert_fuzzy_eq!(n, expected_result);
-    // }
+        assert_fuzzy_eq!(expected_result, n);
+    }
 
-    // #[test]
-    // fn computing_the_normal_on_a_scaled_and_rotated_sphere() {
-    //     let s = Sphere::default()
-    //         .with_transform(Matrix::scaling(1.0, 0.5, 1.0) * Matrix::rotation_z(PI / 5.0));
-    //     let sqrt2_over_2 = (2.0 as F).sqrt() / 2.0;
-    //     let p = Point::new(0.0, sqrt2_over_2, -sqrt2_over_2);
-    //     let n = s.normal_at(p);
+    #[test]
+    fn computing_the_normal_on_a_scaled_and_rotated_sphere() {
+        let s = Sphere::with_transform(
+            Matrix::scale(1.0, 0.5, 1.0) * Matrix::rotate(Rotation::Z, PI / 5.0),
+        );
+        let p = Point::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2);
+        let n = s.normal_at(p);
 
-    //     let expected_result = Vector::new(0.0, 0.97014, -0.24254);
+        let expected_result = Vector::new(0.0, 0.97014, -0.24254);
 
-    //     assert_fuzzy_eq!(n, expected_result);
-    // }
+        assert_fuzzy_eq!(expected_result, n);
+    }
 
-    // #[test]
-    // fn the_normal_vector_is_always_normalized() {
-    //     let s = Sphere::default();
-    //     let sqrt3_over_3 = (3.0 as F).sqrt() / 3.0;
-    //     let p = Point::new(sqrt3_over_3, sqrt3_over_3, sqrt3_over_3);
-    //     let n = s.normal_at(p);
+    #[test]
+    fn the_normal_vector_is_always_normalized() {
+        let s = Sphere::default();
+        let p = Point::new(FRAC_1_SQRT_3, FRAC_1_SQRT_3, FRAC_1_SQRT_3);
+        let n = s.normal_at(p);
 
-    //     assert_fuzzy_eq!(n.normalize(), n);
-    // }
+        assert_fuzzy_eq!(n.normalize(), n);
+    }
 
-    // #[test]
-    // fn the_normal_vector_is_normalized_on_transformed_sphere() {
-    //     let s = Sphere::default()
-    //         .with_transform(Matrix::scaling(1.0, 0.5, 1.0) * Matrix::rotation_z(PI / 5.0));
-    //     let sqrt2_over_2 = (2.0 as F).sqrt() / 2.0;
-    //     let p = Point::new(0.0, sqrt2_over_2, -sqrt2_over_2);
-    //     let n = s.normal_at(p);
+    #[test]
+    fn the_normal_vector_is_normalized_on_transformed_sphere() {
+        let s = Sphere::with_transform(
+            Matrix::scale(1.0, 0.5, 1.0) * Matrix::rotate(Rotation::Z, PI / 5.0),
+        );
+        let p = Point::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2);
+        let n = s.normal_at(p);
 
-    //     assert_fuzzy_eq!(n.normalize(), n);
-    // }
+        assert_fuzzy_eq!(n.normalize(), n);
+    }
 
     // #[test]
     // fn sphere_has_default_phong_material() {
