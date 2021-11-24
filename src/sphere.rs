@@ -74,17 +74,11 @@ where
     T: Illuminated + Default,
 {
     pub fn with_transform(self, transform: Matrix<4>) -> Self {
-        Self {
-            transform,
-            material: self.material,
-        }
+        Self { transform, ..self }
     }
 
     pub fn with_material(self, material: T) -> Self {
-        Self {
-            material,
-            transform: self.transform,
-        }
+        Self { material, ..self }
     }
 }
 
