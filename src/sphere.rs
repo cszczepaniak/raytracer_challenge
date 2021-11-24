@@ -14,7 +14,7 @@ where
     T: Illuminated,
 {
     transform: Matrix<4>,
-    material: T,
+    pub material: T,
 }
 
 impl<T> Default for Sphere<T>

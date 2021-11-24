@@ -16,7 +16,7 @@ where
     T: Intersectable<T> + FuzzyEq,
 {
     pub t: f64,
-    body: &'a T,
+    pub body: &'a T,
 }
 
 impl<'a, T> Intersection<'a, T>

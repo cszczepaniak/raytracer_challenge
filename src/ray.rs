@@ -1,5 +1,6 @@
 use crate::{matrix::Matrix, point::Point, vector::Vector};
 
+#[derive(Clone, Copy)]
 pub struct Ray {
     pub origin: Point,
     pub direction: Vector,
