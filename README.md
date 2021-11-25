@@ -1,0 +1,2 @@
+# The Raytracer Challenge
+This repo is me following along with [MrJakob's youtube series](https://youtube.com/playlist?list=PLy68GuC77sUTyOUvDhVboQoOlHoa4XrSO) where he walks through [The Raytracer Challenge](http://raytracerchallenge.com/).
