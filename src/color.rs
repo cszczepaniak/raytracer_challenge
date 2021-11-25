@@ -3,7 +3,7 @@ use crate::tuple::{ElementwiseMul, Tuple, TupleAdd, TupleSub};
 #[derive(Clone, Copy, Debug)]
 pub struct ColorTuple {}
 
-// Colors can add,subtract, and elementwise multiply
+// Colors can add, subtract, and elementwise multiply
 impl TupleAdd for ColorTuple {}
 impl TupleSub for ColorTuple {}
 impl ElementwiseMul for ColorTuple {}
