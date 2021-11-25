@@ -1,0 +1,12 @@
+#!/bin/sh
+set -e
+
+if [ -z "$(git diff --staged --name-only | grep -E "\w+\.rs")" ]; then
+    echo 'Nothing to do in the pre-commit hook!'
+    exit 0
+fi
+
+echo '+cargo test'
+cargo test
+echo '+cargo clippy -- -D warnings'
+cargo clippy -- -D warnings

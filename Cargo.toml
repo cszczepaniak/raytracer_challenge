@@ -14,7 +14,7 @@ itertools = "0.10.1"
 [dev-dependencies.cargo-husky]
 version = "1"
 default-features = false
-features = ["precommit-hook", "run-cargo-test", "run-cargo-clippy"]
+features = ["user-hooks"]
 
 [profile.release]
 debug = true
