@@ -1,7 +1,7 @@
 use std::{f64::consts::PI, fs};
 
 use raytracer::{
-    canvas::{to_png::ToPng, to_ppm::ToPpm, Canvas},
+    canvas::{Canvas, ToPng, ToPpm},
     color::Color,
     matrix::{Matrix, Rotation},
     point::Point,

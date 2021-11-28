@@ -3,7 +3,7 @@ use std::{fs, sync::Mutex};
 use itertools::Itertools;
 use rayon::prelude::*;
 use raytracer::{
-    canvas::{to_png::ToPng, Canvas},
+    canvas::{Canvas, ToPng},
     color::Color,
     intersection::Intersectable,
     matrix::Matrix,
