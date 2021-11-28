@@ -5,7 +5,7 @@ use rayon::prelude::*;
 use raytracer::{
     canvas::{Canvas, ToPng},
     color::Color,
-    intersection::Intersectable,
+    intersection::{Intersectable, Normal},
     light::PointLight,
     material::{Illuminated, Phong, PhongAttribute},
     point::Point,

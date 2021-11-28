@@ -1,5 +1,5 @@
 use crate::{
-    intersection::{Intersectable, Intersection, Intersections},
+    intersection::{Intersectable, Intersection, Intersections, Normal},
     material::{Illuminated, Phong},
     matrix::Matrix,
     point::Point,
@@ -59,7 +59,12 @@ where
             vec![Intersection::new(t1, self), Intersection::new(t2, self)].into()
         }
     }
+}
 
+impl<T> Normal for Sphere<T>
+where
+    T: Illuminated,
+{
     fn normal_at(&self, p: Point) -> Vector {
         let t_inv = self.transform.inverse();
         let object_point = t_inv * p;

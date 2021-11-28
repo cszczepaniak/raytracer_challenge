@@ -4,16 +4,19 @@ use crate::{point::Point, ray::Ray, utils::FuzzyEq, vector::Vector};
 
 pub trait Intersectable<T>
 where
-    T: Intersectable<T> + FuzzyEq,
+    T: Intersectable<T> + Normal + FuzzyEq,
 {
     fn intersect(&self, r: Ray) -> Intersections<T>;
+}
+
+pub trait Normal {
     fn normal_at(&self, p: Point) -> Vector;
 }
 
 #[derive(Clone, Copy, Debug)]
 pub struct Intersection<'a, T>
 where
-    T: Intersectable<T> + FuzzyEq,
+    T: Intersectable<T> + Normal + FuzzyEq,
 {
     pub t: f64,
     pub body: &'a T,
@@ -21,7 +24,7 @@ where
 
 impl<'a, T> Intersection<'a, T>
 where
-    T: Intersectable<T> + FuzzyEq,
+    T: Intersectable<T> + Normal + FuzzyEq,
 {
     pub fn new(t: f64, body: &'a T) -> Self {
         Self { t, body }
@@ -30,7 +33,7 @@ where
 
 impl<'a, T> FuzzyEq for &Intersection<'a, T>
 where
-    T: FuzzyEq + Intersectable<T>,
+    T: FuzzyEq + Normal + Intersectable<T>,
 {
     fn fuzzy_eq(&self, other: Self) -> bool {
         self.t.fuzzy_eq(other.t) && self.body.fuzzy_eq(*other.body)
@@ -39,14 +42,14 @@ where
 
 pub struct Intersections<'a, T>
 where
-    T: Intersectable<T> + FuzzyEq,
+    T: Intersectable<T> + Normal + FuzzyEq,
 {
     intersections: Vec<Intersection<'a, T>>,
 }
 
 impl<'a, T> Intersections<'a, T>
 where
-    T: Intersectable<T> + FuzzyEq,
+    T: Intersectable<T> + Normal + FuzzyEq,
 {
     pub fn hit(&self) -> Option<&Intersection<'a, T>> {
         for intersection in self.intersections.iter() {
@@ -68,7 +71,7 @@ where
 
 impl<'a, T> From<Vec<Intersection<'a, T>>> for Intersections<'a, T>
 where
-    T: Intersectable<T> + FuzzyEq,
+    T: Intersectable<T> + Normal + FuzzyEq,
 {
     fn from(mut intersections: Vec<Intersection<'a, T>>) -> Self {
         intersections.sort_unstable_by(|a, b| a.t.partial_cmp(&b.t).unwrap());
@@ -78,7 +81,7 @@ where
 
 impl<'a, T> Index<usize> for Intersections<'a, T>
 where
-    T: Intersectable<T> + FuzzyEq,
+    T: Intersectable<T> + Normal + FuzzyEq,
 {
     type Output = Intersection<'a, T>;
 
@@ -89,10 +92,23 @@ where
 
 impl<'a, T> IndexMut<usize> for Intersections<'a, T>
 where
-    T: Intersectable<T> + FuzzyEq,
+    T: Intersectable<T> + Normal + FuzzyEq,
 {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.intersections[index]
+    }
+}
+
+impl<'a, T> IntoIterator for Intersections<'a, T>
+where
+    T: Intersectable<T> + Normal + FuzzyEq,
+{
+    type Item = Intersection<'a, T>;
+
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.intersections.into_iter()
     }
 }
 

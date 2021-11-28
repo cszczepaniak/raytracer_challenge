@@ -10,3 +10,4 @@ pub mod sphere;
 mod tuple;
 pub mod utils;
 pub mod vector;
+pub mod world;
