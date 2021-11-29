@@ -1,6 +1,7 @@
 pub mod body;
 pub mod canvas;
 pub mod color;
+pub mod computed_intersection;
 pub mod intersection;
 pub mod light;
 pub mod material;

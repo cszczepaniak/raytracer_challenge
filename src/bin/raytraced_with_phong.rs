@@ -5,7 +5,7 @@ use rayon::prelude::*;
 use raytracer::{
     canvas::{Canvas, ToPng},
     color::Color,
-    intersection::{Intersectable, Normal},
+    intersection::Intersectable,
     light::PointLight,
     material::{Illuminated, Material, Phong, PhongAttribute},
     point::Point,
@@ -47,10 +47,13 @@ fn main() {
             let intersections = sphere.intersect(ray);
             let hit = intersections.hit();
             if let Some(hit) = hit {
-                let position = ray.position(hit.t);
-                let normal = hit.body.normal_at(position);
-                let eye = -ray.direction;
-                let color = hit.body.material().lighting(&light, position, eye, normal);
+                let computed = hit.computed();
+                let color = hit.body.material().lighting(
+                    &light,
+                    computed.position,
+                    computed.eye,
+                    computed.normal,
+                );
 
                 let mut canvas = canvas_mutex.lock().unwrap();
                 canvas.write_pixel(col, row, color);

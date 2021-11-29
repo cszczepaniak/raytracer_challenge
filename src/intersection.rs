@@ -1,6 +1,9 @@
 use std::ops::{Index, IndexMut};
 
-use crate::{body::Body, point::Point, ray::Ray, utils::FuzzyEq, vector::Vector};
+use crate::{
+    body::Body, computed_intersection::ComputedIntersection, point::Point, ray::Ray,
+    utils::FuzzyEq, vector::Vector,
+};
 
 pub trait Intersectable {
     fn intersect(&self, r: Ray) -> Intersections;
@@ -13,12 +16,20 @@ pub trait Normal {
 #[derive(Clone, Copy, Debug)]
 pub struct Intersection {
     pub t: f64,
+    pub ray: Ray,
     pub body: Body,
 }
 
 impl Intersection {
-    pub fn new(t: f64, body: Body) -> Self {
-        Self { t, body }
+    pub fn new(t: f64, ray: Ray, body: Body) -> Self {
+        Self { t, ray, body }
+    }
+
+    pub fn computed(&self) -> ComputedIntersection {
+        let position = self.ray.position(self.t);
+        let normal = self.body.normal_at(position);
+        let eye = -self.ray.direction;
+        ComputedIntersection::new(self, position, normal, eye)
     }
 }
 
@@ -91,7 +102,9 @@ mod tests {
     #[test]
     fn intersection_encapsulates_t_and_body() {
         let b = Body::from(Sphere::default());
-        let i = Intersection::new(3.5, b);
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
+
+        let i = Intersection::new(3.5, r, b);
         assert_fuzzy_eq!(3.5, i.t);
         assert_fuzzy_eq!(b, i.body);
     }
@@ -99,9 +112,10 @@ mod tests {
     #[test]
     fn the_hit_when_all_intersections_have_positive_t() {
         let b = Body::from(Sphere::default());
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
 
-        let i1 = Intersection::new(1.0, b);
-        let i2 = Intersection::new(2.0, b);
+        let i1 = Intersection::new(1.0, r, b);
+        let i2 = Intersection::new(2.0, r, b);
 
         let xs: Intersections = vec![i2, i1].into();
 
@@ -111,9 +125,10 @@ mod tests {
     #[test]
     fn the_hit_when_some_intersections_have_negative_t() {
         let b = Body::from(Sphere::default());
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
 
-        let i1 = Intersection::new(-1.0, b);
-        let i2 = Intersection::new(1.0, b);
+        let i1 = Intersection::new(-1.0, r, b);
+        let i2 = Intersection::new(1.0, r, b);
 
         let xs: Intersections = vec![i2, i1].into();
 
@@ -123,9 +138,10 @@ mod tests {
     #[test]
     fn the_hit_when_all_intersections_have_negative_t() {
         let b = Body::from(Sphere::default());
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
 
-        let i1 = Intersection::new(-2.0, b);
-        let i2 = Intersection::new(-1.0, b);
+        let i1 = Intersection::new(-2.0, r, b);
+        let i2 = Intersection::new(-1.0, r, b);
 
         let xs: Intersections = vec![i2, i1].into();
 
@@ -133,18 +149,18 @@ mod tests {
         assert_fuzzy_eq!(xs.hit(), exp);
     }
 
-    //   #[test]
-    //   fn precomputing_the_state_of_an_intersection() {
-    //     let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
-    //     let body = Body::from(Sphere::default());
-    //     let i = Intersection::new(4.0, r, body);
-    //     let c = i.get_computed();
+    #[test]
+    fn precomputing_the_state_of_an_intersection() {
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
+        let body = Body::from(Sphere::default());
+        let i = Intersection::new(4.0, r, body);
+        let c = i.computed();
 
-    //     assert_eq!(c.intersection, &i);
-    //     assert_fuzzy_eq!(c.point, Point::new(0.0, 0.0, -1.0));
-    //     assert_fuzzy_eq!(c.eyev, Vector::new(0.0, 0.0, -1.0));
-    //     assert_fuzzy_eq!(c.normalv, Vector::new(0.0, 0.0, -1.0));
-    //   }
+        assert_fuzzy_eq!(&i, c.intersection);
+        assert_fuzzy_eq!(Point::new(0.0, 0.0, -1.0), c.position);
+        assert_fuzzy_eq!(Vector::new(0.0, 0.0, -1.0), c.eye);
+        assert_fuzzy_eq!(Vector::new(0.0, 0.0, -1.0), c.normal);
+    }
 
     //   #[test]
     //   fn the_hit_when_an_intersection_occurs_on_the_outside() {
