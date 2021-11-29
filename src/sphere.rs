@@ -1,6 +1,6 @@
 use crate::{
     intersection::{Intersectable, Intersection, Intersections, Normal},
-    material::{Illuminated, Phong},
+    material::Material,
     matrix::Matrix,
     point::Point,
     ray::Ray,
@@ -9,40 +9,28 @@ use crate::{
 };
 
 #[derive(Clone, Copy, Debug)]
-pub struct Sphere<T = Phong>
-where
-    T: Illuminated,
-{
+pub struct Sphere {
     transform: Matrix<4>,
-    pub material: T,
+    pub material: Material,
 }
 
-impl<T> Default for Sphere<T>
-where
-    T: Illuminated + Default,
-{
+impl Default for Sphere {
     fn default() -> Self {
         Self {
             transform: Matrix::identity(),
-            material: T::default(),
+            material: Material::default(),
         }
     }
 }
 
-impl<T> FuzzyEq for Sphere<T>
-where
-    T: Illuminated + Copy,
-{
+impl FuzzyEq for Sphere {
     fn fuzzy_eq(&self, other: Self) -> bool {
         self.transform.fuzzy_eq(other.transform)
     }
 }
 
-impl<T> Intersectable<Sphere<T>> for Sphere<T>
-where
-    T: Illuminated + Copy,
-{
-    fn intersect(&self, r: Ray) -> Intersections<Sphere<T>> {
+impl Intersectable for Sphere {
+    fn intersect(&self, r: Ray) -> Intersections {
         let object_space_ray = r.transform(self.transform.inverse());
 
         let sphere_to_ray = object_space_ray.origin - Point::new(0.0, 0.0, 0.0);
@@ -56,15 +44,16 @@ where
         } else {
             let t1 = (-b - descriminant.sqrt()) / (2.0 * a);
             let t2 = (-b + descriminant.sqrt()) / (2.0 * a);
-            vec![Intersection::new(t1, self), Intersection::new(t2, self)].into()
+            vec![
+                Intersection::new(t1, (*self).into()),
+                Intersection::new(t2, (*self).into()),
+            ]
+            .into()
         }
     }
 }
 
-impl<T> Normal for Sphere<T>
-where
-    T: Illuminated,
-{
+impl Normal for Sphere {
     fn normal_at(&self, p: Point) -> Vector {
         let t_inv = self.transform.inverse();
         let object_point = t_inv * p;
@@ -74,15 +63,12 @@ where
     }
 }
 
-impl<T> Sphere<T>
-where
-    T: Illuminated + Default,
-{
+impl Sphere {
     pub fn with_transform(self, transform: Matrix<4>) -> Self {
         Self { transform, ..self }
     }
 
-    pub fn with_material(self, material: T) -> Self {
+    pub fn with_material(self, material: Material) -> Self {
         Self { material, ..self }
     }
 }
@@ -170,7 +156,7 @@ mod tests {
 
     #[test]
     fn changing_a_spheres_transform() {
-        let mut s: Sphere<Phong> = Sphere::default();
+        let mut s = Sphere::default();
         let m = Matrix::translate(2.0, 3.0, 4.0);
         s.transform = m;
 
@@ -285,20 +271,20 @@ mod tests {
     #[test]
     fn sphere_has_default_phong_material() {
         let s: Sphere = Sphere::default();
-        let m = Phong::default();
+        let m = Material::default();
 
         assert_fuzzy_eq!(m, s.material);
     }
 
     #[test]
     fn sphere_may_be_assigned_a_material() {
-        let phong = Phong::new(&[
+        let phong = Material::Phong(Phong::new(&[
             PhongAttribute::Color(Color::new(1.0, 1.0, 0.0)),
             PhongAttribute::Ambient(0.05),
             PhongAttribute::Diffuse(0.7),
             PhongAttribute::Specular(0.95),
             PhongAttribute::Shininess(400.0),
-        ]);
+        ]));
         let s = Sphere::default().with_material(phong);
 
         assert_fuzzy_eq!(phong, s.material);

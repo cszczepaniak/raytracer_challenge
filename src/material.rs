@@ -11,6 +11,41 @@ pub trait Illuminated {
 }
 
 #[derive(Clone, Copy, Debug)]
+pub enum Material {
+    Phong(Phong),
+}
+
+impl Illuminated for Material {
+    fn lighting(
+        &self,
+        light: &PointLight,
+        position: Point,
+        eye_vector: Vector,
+        normal_vector: Vector,
+    ) -> Color {
+        match self {
+            Material::Phong(p) => p.lighting(light, position, eye_vector, normal_vector),
+        }
+    }
+}
+
+impl Default for Material {
+    fn default() -> Self {
+        Material::Phong(Phong::default())
+    }
+}
+
+impl FuzzyEq for Material {
+    fn fuzzy_eq(&self, other: Self) -> bool {
+        match self {
+            Material::Phong(p) => match other {
+                Material::Phong(op) => p.fuzzy_eq(op),
+            },
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
 pub struct Phong {
     pub color: Color,
     pub ambient: f64,

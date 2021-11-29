@@ -1,3 +1,4 @@
+pub mod body;
 pub mod canvas;
 pub mod color;
 pub mod intersection;

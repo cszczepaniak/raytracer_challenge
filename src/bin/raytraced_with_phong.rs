@@ -7,7 +7,7 @@ use raytracer::{
     color::Color,
     intersection::{Intersectable, Normal},
     light::PointLight,
-    material::{Illuminated, Phong, PhongAttribute},
+    material::{Illuminated, Material, Phong, PhongAttribute},
     point::Point,
     ray::Ray,
     sphere::Sphere,
@@ -21,7 +21,9 @@ fn main() {
     let canvas_size = 4096;
     let pixel_world_ratio = wall_size / canvas_size as f64;
 
-    let material = Phong::new(&[PhongAttribute::Color(Color::new(0.1, 0.7, 1.0))]);
+    let material = Material::Phong(Phong::new(&[PhongAttribute::Color(Color::new(
+        0.1, 0.7, 1.0,
+    ))]));
     let sphere: Sphere = Sphere::default().with_material(material);
 
     let light = PointLight::new(Point::new(20.0, 30.0, -20.0), Color::new(1.0, 1.0, 1.0));
@@ -48,7 +50,7 @@ fn main() {
                 let position = ray.position(hit.t);
                 let normal = hit.body.normal_at(position);
                 let eye = -ray.direction;
-                let color = hit.body.material.lighting(&light, position, eye, normal);
+                let color = hit.body.material().lighting(&light, position, eye, normal);
 
                 let mut canvas = canvas_mutex.lock().unwrap();
                 canvas.write_pixel(col, row, color);

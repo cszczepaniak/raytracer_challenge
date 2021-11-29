@@ -1,12 +1,9 @@
 use std::ops::{Index, IndexMut};
 
-use crate::{point::Point, ray::Ray, utils::FuzzyEq, vector::Vector};
+use crate::{body::Body, point::Point, ray::Ray, utils::FuzzyEq, vector::Vector};
 
-pub trait Intersectable<T>
-where
-    T: Intersectable<T> + Normal + FuzzyEq,
-{
-    fn intersect(&self, r: Ray) -> Intersections<T>;
+pub trait Intersectable {
+    fn intersect(&self, r: Ray) -> Intersections;
 }
 
 pub trait Normal {
@@ -14,44 +11,29 @@ pub trait Normal {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct Intersection<'a, T>
-where
-    T: Intersectable<T> + Normal + FuzzyEq,
-{
+pub struct Intersection {
     pub t: f64,
-    pub body: &'a T,
+    pub body: Body,
 }
 
-impl<'a, T> Intersection<'a, T>
-where
-    T: Intersectable<T> + Normal + FuzzyEq,
-{
-    pub fn new(t: f64, body: &'a T) -> Self {
+impl Intersection {
+    pub fn new(t: f64, body: Body) -> Self {
         Self { t, body }
     }
 }
 
-impl<'a, T> FuzzyEq for &Intersection<'a, T>
-where
-    T: FuzzyEq + Normal + Intersectable<T>,
-{
+impl FuzzyEq for &Intersection {
     fn fuzzy_eq(&self, other: Self) -> bool {
-        self.t.fuzzy_eq(other.t) && self.body.fuzzy_eq(*other.body)
+        self.t.fuzzy_eq(other.t) && self.body.fuzzy_eq(other.body)
     }
 }
 
-pub struct Intersections<'a, T>
-where
-    T: Intersectable<T> + Normal + FuzzyEq,
-{
-    intersections: Vec<Intersection<'a, T>>,
+pub struct Intersections {
+    intersections: Vec<Intersection>,
 }
 
-impl<'a, T> Intersections<'a, T>
-where
-    T: Intersectable<T> + Normal + FuzzyEq,
-{
-    pub fn hit(&self) -> Option<&Intersection<'a, T>> {
+impl Intersections {
+    pub fn hit(&self) -> Option<&Intersection> {
         for intersection in self.intersections.iter() {
             if intersection.t > 0.0 {
                 return Some(intersection);
@@ -69,41 +51,29 @@ where
     }
 }
 
-impl<'a, T> From<Vec<Intersection<'a, T>>> for Intersections<'a, T>
-where
-    T: Intersectable<T> + Normal + FuzzyEq,
-{
-    fn from(mut intersections: Vec<Intersection<'a, T>>) -> Self {
+impl From<Vec<Intersection>> for Intersections {
+    fn from(mut intersections: Vec<Intersection>) -> Self {
         intersections.sort_unstable_by(|a, b| a.t.partial_cmp(&b.t).unwrap());
         Self { intersections }
     }
 }
 
-impl<'a, T> Index<usize> for Intersections<'a, T>
-where
-    T: Intersectable<T> + Normal + FuzzyEq,
-{
-    type Output = Intersection<'a, T>;
+impl Index<usize> for Intersections {
+    type Output = Intersection;
 
     fn index(&self, index: usize) -> &Self::Output {
         &self.intersections[index]
     }
 }
 
-impl<'a, T> IndexMut<usize> for Intersections<'a, T>
-where
-    T: Intersectable<T> + Normal + FuzzyEq,
-{
+impl IndexMut<usize> for Intersections {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.intersections[index]
     }
 }
 
-impl<'a, T> IntoIterator for Intersections<'a, T>
-where
-    T: Intersectable<T> + Normal + FuzzyEq,
-{
-    type Item = Intersection<'a, T>;
+impl IntoIterator for Intersections {
+    type Item = Intersection;
 
     type IntoIter = std::vec::IntoIter<Self::Item>;
 
@@ -120,46 +90,46 @@ mod tests {
 
     #[test]
     fn intersection_encapsulates_t_and_body() {
-        let s: Sphere = Sphere::default();
-        let i = Intersection::new(3.5, &s);
+        let b = Body::from(Sphere::default());
+        let i = Intersection::new(3.5, b);
         assert_fuzzy_eq!(3.5, i.t);
-        assert_fuzzy_eq!(s, *i.body);
+        assert_fuzzy_eq!(b, i.body);
     }
 
     #[test]
     fn the_hit_when_all_intersections_have_positive_t() {
-        let s: Sphere = Sphere::default();
+        let b = Body::from(Sphere::default());
 
-        let i1 = Intersection::new(1.0, &s);
-        let i2 = Intersection::new(2.0, &s);
+        let i1 = Intersection::new(1.0, b);
+        let i2 = Intersection::new(2.0, b);
 
-        let xs: Intersections<Sphere> = vec![i2, i1].into();
+        let xs: Intersections = vec![i2, i1].into();
 
         assert_fuzzy_eq!(Some(&i1), xs.hit());
     }
 
     #[test]
     fn the_hit_when_some_intersections_have_negative_t() {
-        let s: Sphere = Sphere::default();
+        let b = Body::from(Sphere::default());
 
-        let i1 = Intersection::new(-1.0, &s);
-        let i2 = Intersection::new(1.0, &s);
+        let i1 = Intersection::new(-1.0, b);
+        let i2 = Intersection::new(1.0, b);
 
-        let xs: Intersections<Sphere> = vec![i2, i1].into();
+        let xs: Intersections = vec![i2, i1].into();
 
         assert_fuzzy_eq!(Some(&i2), xs.hit());
     }
 
     #[test]
     fn the_hit_when_all_intersections_have_negative_t() {
-        let s: Sphere = Sphere::default();
+        let b = Body::from(Sphere::default());
 
-        let i1 = Intersection::new(-2.0, &s);
-        let i2 = Intersection::new(-1.0, &s);
+        let i1 = Intersection::new(-2.0, b);
+        let i2 = Intersection::new(-1.0, b);
 
-        let xs: Intersections<Sphere> = vec![i2, i1].into();
+        let xs: Intersections = vec![i2, i1].into();
 
-        let exp: Option<&Intersection<Sphere>> = None;
+        let exp: Option<&Intersection> = None;
         assert_fuzzy_eq!(xs.hit(), exp);
     }
 
