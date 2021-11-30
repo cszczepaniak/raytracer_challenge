@@ -1,7 +1,9 @@
 use crate::{
     body::Body,
+    color::Color,
     intersection::{Intersectable, Intersection, Intersections},
     light::PointLight,
+    material::Illuminated,
     ray::Ray,
 };
 
@@ -24,6 +26,19 @@ impl World {
             .collect();
         Intersections::from(xss)
     }
+
+    pub fn color_at(&self, ray: Ray) -> Color {
+        let xs = self.intersect(ray);
+        let hit = xs.hit();
+        if let Some(hit) = hit {
+            let c = hit.computed();
+            let material = hit.body.material();
+            // TODO implement proper lighting using all the lights, not just the first one
+            material.lighting(&self.lights[0], c.position, c.eye, c.normal)
+        } else {
+            Color::new(0.0, 0.0, 0.0)
+        }
+    }
 }
 
 #[cfg(test)]
@@ -43,7 +58,7 @@ mod tests {
     use super::*;
 
     fn create_default_world() -> World {
-        let light = PointLight::new(Point::new(1.0, 0.0, 0.0), Color::new(1.0, 1.0, 1.0));
+        let light = PointLight::new(Point::new(-10.0, 10.0, -10.0), Color::new(1.0, 1.0, 1.0));
         let material = Material::Phong(Phong::new(&[
             PhongAttribute::Color(Color::new(0.8, 1.0, 0.6)),
             PhongAttribute::Diffuse(0.7),
@@ -76,5 +91,23 @@ mod tests {
         assert_fuzzy_eq!(4.5, xs[1].t);
         assert_fuzzy_eq!(5.5, xs[2].t);
         assert_fuzzy_eq!(6.0, xs[3].t);
+    }
+
+    #[test]
+    fn color_when_a_ray_misses() {
+        let w = create_default_world();
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 1.0, 0.0));
+        let c = w.color_at(r);
+
+        assert_fuzzy_eq!(Color::new(0.0, 0.0, 0.0), c);
+    }
+
+    #[test]
+    fn color_when_a_ray_hits() {
+        let w = create_default_world();
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
+        let c = w.color_at(r);
+
+        assert_fuzzy_eq!(Color::new(0.38066, 0.47583, 0.2855), c);
     }
 }
