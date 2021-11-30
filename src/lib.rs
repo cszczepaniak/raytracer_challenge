@@ -1,4 +1,5 @@
 pub mod body;
+pub mod camera;
 pub mod canvas;
 pub mod color;
 pub mod computed_intersection;
