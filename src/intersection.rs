@@ -1,8 +1,12 @@
 use std::ops::{Index, IndexMut};
 
 use crate::{
-    body::Body, computed_intersection::ComputedIntersection, point::Point, ray::Ray,
-    utils::FuzzyEq, vector::Vector,
+    body::Body,
+    computed_intersection::{ComputedIntersection, Orientation},
+    point::Point,
+    ray::Ray,
+    utils::FuzzyEq,
+    vector::Vector,
 };
 
 pub trait Intersectable {
@@ -27,9 +31,17 @@ impl Intersection {
 
     pub fn computed(&self) -> ComputedIntersection {
         let position = self.ray.position(self.t);
-        let normal = self.body.normal_at(position);
+        let mut normal = self.body.normal_at(position);
         let eye = -self.ray.direction;
-        ComputedIntersection::new(self, position, normal, eye)
+
+        let orientation = if normal.dot(&eye) < 0.0 {
+            normal = -normal;
+            Orientation::Inside
+        } else {
+            Orientation::Outside
+        };
+
+        ComputedIntersection::new(self, position, normal, eye, orientation)
     }
 }
 
@@ -162,26 +174,26 @@ mod tests {
         assert_fuzzy_eq!(Vector::new(0.0, 0.0, -1.0), c.normal);
     }
 
-    //   #[test]
-    //   fn the_hit_when_an_intersection_occurs_on_the_outside() {
-    //     let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
-    //     let body = Body::from(Sphere::default());
-    //     let i = Intersection::new(4.0, r, body);
-    //     let c = i.get_computed();
+    #[test]
+    fn the_hit_when_an_intersection_occurs_on_the_outside() {
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
+        let body = Body::from(Sphere::default());
+        let i = Intersection::new(4.0, r, body);
+        let c = i.computed();
 
-    //     assert_eq!(c.inside, false);
-    //   }
+        assert_eq!(Orientation::Outside, c.orientation);
+    }
 
-    //   #[test]
-    //   fn the_hit_when_an_intersection_occurs_on_the_inside() {
-    //     let r = Ray::new(Point::new(0.0, 0.0, 0.0), Vector::new(0.0, 0.0, 1.0));
-    //     let body = Body::from(Sphere::default());
-    //     let i = Intersection::new(1.0, r, body);
-    //     let c = i.get_computed();
+    #[test]
+    fn the_hit_when_an_intersection_occurs_on_the_inside() {
+        let r = Ray::new(Point::new(0.0, 0.0, 0.0), Vector::new(0.0, 0.0, 1.0));
+        let body = Body::from(Sphere::default());
+        let i = Intersection::new(1.0, r, body);
+        let c = i.computed();
 
-    //     assert_eq!(c.inside, true);
-    //     assert_eq!(c.normalv, Vector::new(0.0, 0.0, -1.0));
-    //   }
+        assert_eq!(Orientation::Inside, c.orientation);
+        assert_fuzzy_eq!(Vector::new(0.0, 0.0, -1.0), c.normal);
+    }
 
     //   #[test]
     //   fn the_hit_should_offset_the_point() {
