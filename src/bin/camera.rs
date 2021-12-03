@@ -1,4 +1,8 @@
-use std::{f64::consts::FRAC_PI_3, fs, sync::Mutex};
+use std::{
+    f64::consts::{FRAC_PI_2, FRAC_PI_3, FRAC_PI_4},
+    fs,
+    sync::Mutex,
+};
 
 use itertools::Itertools;
 use rayon::prelude::*;
@@ -8,7 +12,7 @@ use raytracer::{
     color::Color,
     light::PointLight,
     material::{Material, Phong, PhongAttribute},
-    matrix::Matrix,
+    matrix::{Matrix, Rotation},
     point::Point,
     sphere::Sphere,
     vector::Vector,
@@ -16,10 +20,38 @@ use raytracer::{
 };
 
 fn main() {
-    let canvas_width = 7680;
-    let canvas_height = 4320;
+    let canvas_width = 3840;
+    let canvas_height = 2160;
 
     let light = PointLight::new(Point::new(-10.0, 10.0, -10.0), Color::new(1.0, 1.0, 1.0));
+
+    // Floor and walls. Cheat by using squashed spheres...
+    let floor_and_wall_material = Material::Phong(Phong::new(&[
+        PhongAttribute::Color(Color::new(0.5, 0.45, 0.45)),
+        PhongAttribute::Specular(0.0),
+    ]));
+
+    let floor_sphere = Sphere::default()
+        .with_material(floor_and_wall_material)
+        .with_transform(Matrix::scale(10.0, 0.01, 10.0));
+
+    let left_wall_sphere = Sphere::default()
+        .with_material(floor_and_wall_material)
+        .with_transform(
+            Matrix::translate(0.0, 0.0, 5.0)
+                * Matrix::rotate(Rotation::Y, -FRAC_PI_4)
+                * Matrix::rotate(Rotation::X, FRAC_PI_2)
+                * Matrix::scale(10.0, 0.01, 10.0),
+        );
+
+    let right_wall_sphere = Sphere::default()
+        .with_material(floor_and_wall_material)
+        .with_transform(
+            Matrix::translate(0.0, 0.0, 5.0)
+                * Matrix::rotate(Rotation::Y, FRAC_PI_4)
+                * Matrix::rotate(Rotation::X, FRAC_PI_2)
+                * Matrix::scale(10.0, 0.01, 10.0),
+        );
 
     let left_material = Material::Phong(Phong::new(&[
         PhongAttribute::Color(Color::new(1.0, 0.8, 0.1)),
@@ -50,15 +82,18 @@ fn main() {
 
     let world = World::new(
         vec![
-            left_sphere.into(),
+            floor_sphere.into(),
+            left_wall_sphere.into(),
+            right_wall_sphere.into(),
             middle_sphere.into(),
+            left_sphere.into(),
             right_sphere.into(),
         ],
         vec![light],
     );
 
     let camera = Camera::new(canvas_width, canvas_height, FRAC_PI_3).look_at_from_position(
-        Point::new(0.0, 1.0, -5.0),
+        Point::new(0.0, 2.5, -5.0),
         Point::new(0.0, 1.0, 0.0),
         Vector::new(0.0, 1.0, 0.0),
     );
