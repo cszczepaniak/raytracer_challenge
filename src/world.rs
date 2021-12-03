@@ -44,26 +44,22 @@ impl World {
 #[cfg(test)]
 mod tests {
     use crate::{
-        assert_fuzzy_eq,
-        color::Color,
-        material::{Material, Phong, PhongAttribute},
-        matrix::Matrix,
-        point::Point,
-        ray::Ray,
-        sphere::Sphere,
-        utils::FuzzyEq,
-        vector::Vector,
+        assert_fuzzy_eq, color::Color, material::Phong, matrix::Matrix, point::Point, ray::Ray,
+        sphere::Sphere, utils::FuzzyEq, vector::Vector,
     };
 
     use super::*;
 
     fn create_default_world() -> World {
         let light = PointLight::new(Point::new(-10.0, 10.0, -10.0), Color::new(1.0, 1.0, 1.0));
-        let material = Material::Phong(Phong::new(&[
-            PhongAttribute::Color(Color::new(0.8, 1.0, 0.6)),
-            PhongAttribute::Diffuse(0.7),
-            PhongAttribute::Specular(0.2),
-        ]));
+        let material = Phong {
+            color: Color::new(0.8, 1.0, 0.6),
+            diffuse: 0.7,
+            specular: 0.2,
+            ..Phong::default()
+        }
+        .into();
+
         let s1: Body = Sphere::default().with_material(material).into();
         let s2: Body = Sphere::default()
             .with_transform(Matrix::scale(0.5, 0.5, 0.5))

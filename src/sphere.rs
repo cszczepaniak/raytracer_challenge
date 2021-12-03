@@ -79,12 +79,7 @@ mod tests {
 
     use super::*;
     use crate::{
-        assert_fuzzy_eq,
-        color::Color,
-        material::{Phong, PhongAttribute},
-        matrix::Rotation,
-        ray::Ray,
-        utils::FuzzyEq,
+        assert_fuzzy_eq, color::Color, material::Phong, matrix::Rotation, ray::Ray, utils::FuzzyEq,
         vector::Vector,
     };
 
@@ -278,13 +273,15 @@ mod tests {
 
     #[test]
     fn sphere_may_be_assigned_a_material() {
-        let phong = Material::Phong(Phong::new(&[
-            PhongAttribute::Color(Color::new(1.0, 1.0, 0.0)),
-            PhongAttribute::Ambient(0.05),
-            PhongAttribute::Diffuse(0.7),
-            PhongAttribute::Specular(0.95),
-            PhongAttribute::Shininess(400.0),
-        ]));
+        let phong = Phong {
+            color: Color::new(1.0, 1.0, 0.0),
+            ambient: 0.05,
+            diffuse: 0.7,
+            specular: 0.95,
+            shininess: 400.0,
+        }
+        .into();
+
         let s = Sphere::default().with_material(phong);
 
         assert_fuzzy_eq!(phong, s.material);

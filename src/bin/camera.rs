@@ -11,7 +11,7 @@ use raytracer::{
     canvas::{Canvas, ToPng},
     color::Color,
     light::PointLight,
-    material::{Material, Phong, PhongAttribute},
+    material::Phong,
     matrix::{Matrix, Rotation},
     point::Point,
     sphere::Sphere,
@@ -26,10 +26,12 @@ fn main() {
     let light = PointLight::new(Point::new(-10.0, 10.0, -10.0), Color::new(1.0, 1.0, 1.0));
 
     // Floor and walls. Cheat by using squashed spheres...
-    let floor_and_wall_material = Material::Phong(Phong::new(&[
-        PhongAttribute::Color(Color::new(0.5, 0.45, 0.45)),
-        PhongAttribute::Specular(0.0),
-    ]));
+    let floor_and_wall_material = Phong {
+        color: Color::new(0.5, 0.45, 0.45),
+        specular: 0.0,
+        ..Phong::default()
+    }
+    .into();
 
     let floor_sphere = Sphere::default()
         .with_material(floor_and_wall_material)
@@ -53,29 +55,35 @@ fn main() {
                 * Matrix::scale(10.0, 0.01, 10.0),
         );
 
-    let left_material = Material::Phong(Phong::new(&[
-        PhongAttribute::Color(Color::new(1.0, 0.8, 0.1)),
-        PhongAttribute::Diffuse(0.7),
-        PhongAttribute::Specular(0.3),
-    ]));
+    let left_material = Phong {
+        color: Color::new(1.0, 0.8, 0.1),
+        diffuse: 0.7,
+        specular: 0.3,
+        ..Phong::default()
+    }
+    .into();
     let left_sphere = Sphere::default()
         .with_material(left_material)
         .with_transform(Matrix::translate(-1.5, 0.33, -0.75) * Matrix::scale(0.33, 0.33, 0.33));
 
-    let middle_material = Material::Phong(Phong::new(&[
-        PhongAttribute::Color(Color::new(0.1, 1.0, 0.5)),
-        PhongAttribute::Diffuse(0.7),
-        PhongAttribute::Specular(0.3),
-    ]));
+    let middle_material = Phong {
+        color: Color::new(0.1, 1.0, 0.5),
+        diffuse: 0.7,
+        specular: 0.3,
+        ..Phong::default()
+    }
+    .into();
     let middle_sphere = Sphere::default()
         .with_material(middle_material)
         .with_transform(Matrix::translate(-0.5, 1.0, 0.5));
 
-    let right_material = Material::Phong(Phong::new(&[
-        PhongAttribute::Color(Color::new(0.5, 1.0, 0.1)),
-        PhongAttribute::Diffuse(0.7),
-        PhongAttribute::Specular(0.3),
-    ]));
+    let right_material = Phong {
+        color: Color::new(0.5, 1.0, 0.1),
+        diffuse: 0.7,
+        specular: 0.3,
+        ..Phong::default()
+    }
+    .into();
     let right_sphere = Sphere::default()
         .with_material(right_material)
         .with_transform(Matrix::translate(1.5, 0.5, -0.5) * Matrix::scale(0.5, 0.5, 0.5));

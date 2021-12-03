@@ -29,6 +29,12 @@ impl Illuminated for Material {
     }
 }
 
+impl From<Phong> for Material {
+    fn from(p: Phong) -> Self {
+        Material::Phong(p)
+    }
+}
+
 impl Default for Material {
     fn default() -> Self {
         Material::Phong(Phong::default())
@@ -117,30 +123,6 @@ impl FuzzyEq for Phong {
     }
 }
 
-pub enum PhongAttribute {
-    Color(Color),
-    Ambient(f64),
-    Diffuse(f64),
-    Specular(f64),
-    Shininess(f64),
-}
-
-impl Phong {
-    pub fn new(attrs: &[PhongAttribute]) -> Self {
-        let mut res = Phong::default();
-        for attr in attrs {
-            match *attr {
-                PhongAttribute::Color(c) => res.color = c,
-                PhongAttribute::Ambient(a) => res.ambient = a,
-                PhongAttribute::Diffuse(d) => res.diffuse = d,
-                PhongAttribute::Specular(s) => res.specular = s,
-                PhongAttribute::Shininess(s) => res.shininess = s,
-            }
-        }
-        res
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use std::f64::consts::FRAC_1_SQRT_2;
@@ -163,15 +145,15 @@ mod tests {
 
     #[test]
     fn phong_material_can_be_constructed_with_properties() {
-        let m = Phong::new(&[
-            PhongAttribute::Ambient(0.2),
-            PhongAttribute::Diffuse(1.0),
-            PhongAttribute::Specular(0.7),
-            PhongAttribute::Ambient(0.4),
-        ]);
+        let m = Phong {
+            ambient: 0.2,
+            diffuse: 1.0,
+            specular: 0.7,
+            ..Phong::default()
+        };
 
         assert_fuzzy_eq!(Color::new(1.0, 1.0, 1.0), m.color);
-        assert_fuzzy_eq!(0.4, m.ambient);
+        assert_fuzzy_eq!(0.2, m.ambient);
         assert_fuzzy_eq!(1.0, m.diffuse);
         assert_fuzzy_eq!(0.7, m.specular);
         assert_fuzzy_eq!(200.0, m.shininess);
