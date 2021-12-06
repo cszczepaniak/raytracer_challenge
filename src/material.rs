@@ -250,4 +250,22 @@ mod tests {
 
         assert_fuzzy_eq!(actual_result, expected_result);
     }
+
+    #[test]
+    fn lighting_with_surface_in_shadow() {
+        let m = Phong {
+            ambient: 0.22,
+            ..Phong::default()
+        };
+        let position = Point::new(0.0, 0.0, 0.0);
+
+        let eye = Vector::new(0.0, 0.0, -1.0);
+        let normal = Vector::new(0.0, 0.0, -1.0);
+        let light = PointLight::new(Point::new(0.0, 0.0, -10.0), Color::new(1.0, 1.0, 1.0));
+
+        assert_fuzzy_eq!(
+            Color::new(0.22, 0.22, 0.22),
+            m.lighting(&light, position, eye, normal, ShadowState::Shadow)
+        )
+    }
 }
