@@ -3,7 +3,7 @@ use crate::{
     color::Color,
     intersection::{Intersectable, Intersection, Intersections},
     light::PointLight,
-    material::Illuminated,
+    material::{Illuminated, ShadowState},
     ray::Ray,
 };
 
@@ -34,7 +34,13 @@ impl World {
             let c = hit.computed();
             let material = hit.body.material();
             // TODO implement proper lighting using all the lights, not just the first one
-            material.lighting(&self.lights[0], c.position, c.eye, c.normal)
+            material.lighting(
+                &self.lights[0],
+                c.position,
+                c.eye,
+                c.normal,
+                ShadowState::Clear,
+            )
         } else {
             Color::new(0.0, 0.0, 0.0)
         }

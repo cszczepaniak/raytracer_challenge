@@ -7,7 +7,7 @@ use raytracer::{
     color::Color,
     intersection::Intersectable,
     light::PointLight,
-    material::{Illuminated, Phong},
+    material::{Illuminated, Phong, ShadowState},
     point::Point,
     ray::Ray,
     sphere::Sphere,
@@ -55,6 +55,7 @@ fn main() {
                     computed.position,
                     computed.eye,
                     computed.normal,
+                    ShadowState::Clear,
                 );
 
                 let mut canvas = canvas_mutex.lock().unwrap();

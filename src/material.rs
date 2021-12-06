@@ -7,6 +7,7 @@ pub trait Illuminated {
         position: Point,
         eye_vector: Vector,
         normal_vector: Vector,
+        shadow_state: ShadowState,
     ) -> Color;
 }
 
@@ -22,9 +23,12 @@ impl Illuminated for Material {
         position: Point,
         eye_vector: Vector,
         normal_vector: Vector,
+        shadow_state: ShadowState,
     ) -> Color {
         match self {
-            Material::Phong(p) => p.lighting(light, position, eye_vector, normal_vector),
+            Material::Phong(p) => {
+                p.lighting(light, position, eye_vector, normal_vector, shadow_state)
+            }
         }
     }
 }
@@ -51,6 +55,11 @@ impl FuzzyEq for Material {
     }
 }
 
+pub enum ShadowState {
+    Shadow,
+    Clear,
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct Phong {
     pub color: Color,
@@ -67,6 +76,7 @@ impl Illuminated for Phong {
         position: Point,
         eye_vector: Vector,
         normal_vector: Vector,
+        shadow_state: ShadowState,
     ) -> Color {
         let ambient_light: Color;
         let diffuse_light: Color;
@@ -76,6 +86,10 @@ impl Illuminated for Phong {
         let light_vector = (light.position - position).normalize();
 
         ambient_light = effective_color * self.ambient;
+
+        if let ShadowState::Shadow = shadow_state {
+            return ambient_light;
+        }
 
         let light_dot_normal = light_vector.dot(&normal_vector);
         if light_dot_normal < 0.0 {
@@ -170,7 +184,7 @@ mod tests {
 
         assert_fuzzy_eq!(
             Color::new(1.9, 1.9, 1.9),
-            m.lighting(&light, position, eye, normal)
+            m.lighting(&light, position, eye, normal, ShadowState::Clear)
         )
     }
 
@@ -185,7 +199,7 @@ mod tests {
 
         assert_fuzzy_eq!(
             Color::new(1.0, 1.0, 1.0),
-            m.lighting(&light, position, eye, normal)
+            m.lighting(&light, position, eye, normal, ShadowState::Clear)
         )
     }
 
@@ -198,7 +212,7 @@ mod tests {
         let normal = Vector::new(0.0, 0.0, -1.0);
         let light = PointLight::new(Point::new(0.0, 10.0, -10.0), Color::new(1.0, 1.0, 1.0));
 
-        let actual_result = m.lighting(&light, position, eye, normal);
+        let actual_result = m.lighting(&light, position, eye, normal, ShadowState::Clear);
 
         let expected_result = Color::new(0.7364, 0.7364, 0.7364);
 
@@ -214,7 +228,7 @@ mod tests {
         let normal = Vector::new(0.0, 0.0, -1.0);
         let light = PointLight::new(Point::new(0.0, 10.0, -10.0), Color::new(1.0, 1.0, 1.0));
 
-        let actual_result = m.lighting(&light, position, eye, normal);
+        let actual_result = m.lighting(&light, position, eye, normal, ShadowState::Clear);
 
         let expected_result = Color::new(1.6364, 1.6364, 1.6364);
 
@@ -230,7 +244,7 @@ mod tests {
         let normal = Vector::new(0.0, 0.0, -1.0);
         let light = PointLight::new(Point::new(0.0, 0.0, 10.0), Color::new(1.0, 1.0, 1.0));
 
-        let actual_result = m.lighting(&light, position, eye, normal);
+        let actual_result = m.lighting(&light, position, eye, normal, ShadowState::Clear);
 
         let expected_result = Color::new(0.1, 0.1, 0.1);
 
