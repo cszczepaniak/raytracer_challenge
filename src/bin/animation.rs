@@ -9,6 +9,7 @@ use itertools::Itertools;
 use rayon::prelude::*;
 use raytracer::{
     animator::Animator,
+    aspect,
     camera::Camera,
     canvas::{Canvas, ToPng},
     color::Color,
@@ -22,9 +23,10 @@ use raytracer::{
 };
 
 fn main() {
-    let canvas_width = 1920;
-    let canvas_height = 1080;
-    let animator = Animator::new(25 * 5);
+    let (canvas_width, canvas_height) = aspect::SIZE_1080P;
+    let frame_rate = 60;
+    let animation_time = 5;
+    let animator = Animator::new(frame_rate * animation_time);
     animator.animate(|frame| {
         let light_rotation_scale = frame.linear_scale().with_breakpoints(vec![0.0, PI * 2.0]);
         let light_transformation_matrix = Matrix::rotate(
@@ -33,7 +35,7 @@ fn main() {
         );
 
         let light = PointLight::new(
-            light_transformation_matrix * Point::new(-10.0, 10.0, -10.0),
+            light_transformation_matrix * Point::new(-2.0, 4.0, -2.0),
             Color::new(1.0, 1.0, 1.0),
         );
 
@@ -167,7 +169,7 @@ fn main() {
     Command::new("ffmpeg")
         .arg("-y")
         .args(["-stream_loop", "4"])
-        .args(["-r", "25"])
+        .args(["-r", &format!("{}", frame_rate)])
         .args(["-f", "image2"])
         .args(["-s", &format!("{}x{}", canvas_width, canvas_height)])
         .args(["-i", "output/output%06d.png"])

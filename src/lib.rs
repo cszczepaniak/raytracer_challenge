@@ -1,4 +1,5 @@
 pub mod animator;
+pub mod aspect;
 pub mod body;
 pub mod camera;
 pub mod canvas;
