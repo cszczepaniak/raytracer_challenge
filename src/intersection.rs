@@ -3,9 +3,9 @@ use std::ops::{Index, IndexMut};
 use crate::{
     body::Body,
     computed_intersection::{ComputedIntersection, Orientation},
+    fuzzy_eq::{FuzzyEq, EPISILON},
     point::Point,
     ray::Ray,
-    utils::FuzzyEq,
     vector::Vector,
 };
 
@@ -41,7 +41,9 @@ impl Intersection {
             Orientation::Outside
         };
 
-        ComputedIntersection::new(self, position, normal, eye, orientation)
+        let over_point = position + normal * EPISILON;
+
+        ComputedIntersection::new(self, position, over_point, normal, eye, orientation)
     }
 }
 
@@ -107,7 +109,7 @@ impl IntoIterator for Intersections {
 
 #[cfg(test)]
 mod tests {
-    use crate::{assert_fuzzy_eq, sphere::Sphere, utils::FuzzyEq};
+    use crate::{assert_fuzzy_eq, fuzzy_eq::FuzzyEq, sphere::Sphere};
 
     use super::*;
 

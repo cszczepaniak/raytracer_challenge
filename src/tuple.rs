@@ -3,7 +3,7 @@ use std::{
     ops::{self, Add, Div, Index, IndexMut, Mul, Neg},
 };
 
-use crate::utils::FuzzyEq;
+use crate::fuzzy_eq::FuzzyEq;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Tuple<T, const N: usize> {
@@ -158,7 +158,7 @@ where
 mod tests {
 
     use crate::assert_fuzzy_eq;
-    use crate::utils::FuzzyEq;
+    use crate::fuzzy_eq::FuzzyEq;
 
     use super::*;
 

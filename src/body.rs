@@ -1,9 +1,9 @@
 use crate::{
+    fuzzy_eq::FuzzyEq,
     intersection::{Intersectable, Intersections, Normal},
     material::Material,
     ray::Ray,
     sphere::Sphere,
-    utils::FuzzyEq,
 };
 
 #[derive(Clone, Copy, Debug)]

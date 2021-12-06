@@ -1,4 +1,4 @@
-use crate::{color::Color, light::PointLight, point::Point, utils::FuzzyEq, vector::Vector};
+use crate::{color::Color, fuzzy_eq::FuzzyEq, light::PointLight, point::Point, vector::Vector};
 
 pub trait Illuminated {
     fn lighting(
@@ -142,7 +142,7 @@ mod tests {
     use std::f64::consts::FRAC_1_SQRT_2;
 
     use crate::assert_fuzzy_eq;
-    use crate::utils::FuzzyEq;
+    use crate::fuzzy_eq::FuzzyEq;
 
     use super::*;
 

@@ -26,7 +26,7 @@ impl Ray {
 #[cfg(test)]
 mod tests {
     use crate::assert_fuzzy_eq;
-    use crate::utils::*;
+    use crate::fuzzy_eq::*;
 
     use super::*;
 

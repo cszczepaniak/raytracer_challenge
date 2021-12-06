@@ -4,6 +4,7 @@ use crate::{
     intersection::{Intersectable, Intersection, Intersections},
     light::PointLight,
     material::{Illuminated, ShadowState},
+    point::Point,
     ray::Ray,
 };
 
@@ -33,25 +34,33 @@ impl World {
         if let Some(hit) = hit {
             let c = hit.computed();
             let material = hit.body.material();
+            let shadow_state = self.get_shadow_state(c.over_point);
             // TODO implement proper lighting using all the lights, not just the first one
-            material.lighting(
-                &self.lights[0],
-                c.position,
-                c.eye,
-                c.normal,
-                ShadowState::Clear,
-            )
+            material.lighting(&self.lights[0], c.position, c.eye, c.normal, shadow_state)
         } else {
             Color::new(0.0, 0.0, 0.0)
         }
+    }
+
+    fn get_shadow_state(&self, position: Point) -> ShadowState {
+        let shadow_vec = self.lights[0].position - position;
+        let distance = shadow_vec.magnitude();
+        let shadow_ray = Ray::new(position, shadow_vec.normalize());
+        let xs = self.intersect(shadow_ray);
+        if let Some(hit) = xs.hit() {
+            if hit.t < distance {
+                return ShadowState::Shadow;
+            }
+        }
+        ShadowState::Clear
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::{
-        assert_fuzzy_eq, color::Color, material::Phong, matrix::Matrix, point::Point, ray::Ray,
-        sphere::Sphere, utils::FuzzyEq, vector::Vector,
+        assert_fuzzy_eq, color::Color, fuzzy_eq::FuzzyEq, material::Phong, matrix::Matrix,
+        point::Point, ray::Ray, sphere::Sphere, vector::Vector,
     };
 
     use super::*;

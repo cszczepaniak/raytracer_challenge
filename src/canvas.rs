@@ -57,7 +57,7 @@ impl Canvas {
 mod tests {
     use super::*;
     use crate::assert_fuzzy_eq;
-    use crate::utils::FuzzyEq;
+    use crate::fuzzy_eq::FuzzyEq;
 
     #[test]
     fn test_create_canvas() {

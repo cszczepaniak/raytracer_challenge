@@ -3,7 +3,7 @@ use std::{
     ops::{Index, IndexMut, Mul},
 };
 
-use crate::{tuple::Tuple, utils::FuzzyEq};
+use crate::{fuzzy_eq::FuzzyEq, tuple::Tuple};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Matrix<const N: usize> {
@@ -306,7 +306,7 @@ impl<T> Mul<Tuple<T, 4>> for Matrix<4> {
 mod tests {
     use std::f64::consts::{FRAC_1_SQRT_2, FRAC_PI_2, FRAC_PI_4};
 
-    use crate::{assert_fuzzy_eq, point::Point, utils::FuzzyEq, vector::Vector};
+    use crate::{assert_fuzzy_eq, fuzzy_eq::FuzzyEq, point::Point, vector::Vector};
 
     use super::*;
 

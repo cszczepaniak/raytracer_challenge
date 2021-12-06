@@ -1,10 +1,10 @@
 use crate::{
+    fuzzy_eq::FuzzyEq,
     intersection::{Intersectable, Intersection, Intersections, Normal},
     material::Material,
     matrix::Matrix,
     point::Point,
     ray::Ray,
-    utils::FuzzyEq,
     vector::Vector,
 };
 
@@ -79,8 +79,8 @@ mod tests {
 
     use super::*;
     use crate::{
-        assert_fuzzy_eq, color::Color, material::Phong, matrix::Rotation, ray::Ray, utils::FuzzyEq,
-        vector::Vector,
+        assert_fuzzy_eq, color::Color, fuzzy_eq::FuzzyEq, material::Phong, matrix::Rotation,
+        ray::Ray, vector::Vector,
     };
 
     const FRAC_1_SQRT_3: f64 = 0.57735026919;

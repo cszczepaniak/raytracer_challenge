@@ -38,7 +38,7 @@ impl Point {
 #[cfg(test)]
 mod tests {
     use crate::assert_fuzzy_eq;
-    use crate::utils::FuzzyEq;
+    use crate::fuzzy_eq::FuzzyEq;
 
     use super::*;
 

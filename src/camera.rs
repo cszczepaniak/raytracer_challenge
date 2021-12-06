@@ -76,7 +76,7 @@ impl Camera {
 
 #[cfg(test)]
 mod tests {
-    use crate::{matrix::Rotation, utils::FuzzyEq, vector::Vector};
+    use crate::{fuzzy_eq::FuzzyEq, matrix::Rotation, vector::Vector};
     use std::f64::consts::{FRAC_1_SQRT_2, FRAC_PI_2, FRAC_PI_4};
 
     use crate::assert_fuzzy_eq;

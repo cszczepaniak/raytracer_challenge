@@ -55,7 +55,7 @@ mod tests {
 
     use super::*;
     use crate::assert_fuzzy_eq;
-    use crate::utils::FuzzyEq;
+    use crate::fuzzy_eq::FuzzyEq;
 
     macro_rules! dot_tests {
         ($($name:ident: $value:expr,)*) => {
