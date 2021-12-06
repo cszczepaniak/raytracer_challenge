@@ -4,3 +4,5 @@
 perf.*
 stacks.folded
 *.svg
+*.mp4
+output/
